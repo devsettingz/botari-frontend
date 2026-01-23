@@ -2,12 +2,10 @@ import Layout from './components/Layout';
 import DashboardWidget from './components/DashboardWidget';
 
 function App() {
-  // In production, replace with a real JWT from your login flow
-  const token = "YOUR_JWT_TOKEN";
+  const token = "YOUR_JWT_TOKEN"; // Replace with a real token later
 
   return (
     <Layout>
-      {/* You can pass businessId dynamically if needed */}
       <DashboardWidget businessId={1} token={token} />
     </Layout>
   );

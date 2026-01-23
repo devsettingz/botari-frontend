@@ -67,6 +67,9 @@ const DashboardWidget: React.FC<{ businessId: number; token: string }> = ({ busi
   const [activeTab, setActiveTab] = useState<'weekly' | 'monthly'>('weekly');
   const [loading, setLoading] = useState(true);
 
+  // ✅ Use environment variable for backend base URL
+  const API_BASE = import.meta.env.VITE_API_BASE;
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -76,23 +79,23 @@ const DashboardWidget: React.FC<{ businessId: number; token: string }> = ({ busi
       };
 
       try {
-        const weeklyConvoRes = await fetch(`/api/dashboard/${businessId}/trends/weekly`, { headers });
+        const weeklyConvoRes = await fetch(`${API_BASE}/api/dashboard/${businessId}/trends/weekly`, { headers });
         const weeklyConvoData = await weeklyConvoRes.json();
         setWeeklyConvos(weeklyConvoData.weekly_trends || []);
 
-        const weeklyMsgRes = await fetch(`/api/dashboard/${businessId}/trends/messages/weekly`, { headers });
+        const weeklyMsgRes = await fetch(`${API_BASE}/api/dashboard/${businessId}/trends/messages/weekly`, { headers });
         const weeklyMsgData = await weeklyMsgRes.json();
         setWeeklyMsgs(weeklyMsgData.weekly_message_trends || []);
 
-        const monthlyConvoRes = await fetch(`/api/dashboard/${businessId}/trends/monthly`, { headers });
+        const monthlyConvoRes = await fetch(`${API_BASE}/api/dashboard/${businessId}/trends/monthly`, { headers });
         const monthlyConvoData = await monthlyConvoRes.json();
         setMonthlyConvos(monthlyConvoData.monthly_trends || []);
 
-        const monthlyMsgRes = await fetch(`/api/dashboard/${businessId}/trends/messages/monthly`, { headers });
+        const monthlyMsgRes = await fetch(`${API_BASE}/api/dashboard/${businessId}/trends/messages/monthly`, { headers });
         const monthlyMsgData = await monthlyMsgRes.json();
         setMonthlyMsgs(monthlyMsgData.monthly_message_trends || []);
 
-        const responseRes = await fetch(`/api/dashboard/${businessId}`, { headers });
+        const responseRes = await fetch(`${API_BASE}/api/dashboard/${businessId}`, { headers });
         const responseData = await responseRes.json();
         setResponseTimes({
           average_response_seconds: responseData.average_response_seconds,
@@ -114,8 +117,7 @@ const DashboardWidget: React.FC<{ businessId: number; token: string }> = ({ busi
     };
 
     fetchData();
-  }, [businessId, token]);
-
+  }, [businessId, token, API_BASE]);
   const tabStyle = (isActive: boolean) => ({
     padding: '0.5rem 1rem',
     marginRight: '1rem',
@@ -146,6 +148,7 @@ const DashboardWidget: React.FC<{ businessId: number; token: string }> = ({ busi
   if (loading) return <Spinner />;
   return (
     <div style={{ backgroundColor: '#f4f6f8', padding: '2rem', borderRadius: '12px' }}>
+      {/* Summary cards */}
       {summaryStats && (
         <div className="summary-grid" style={{ marginBottom: '2rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1rem' }}>
           <div style={{ padding: '1rem', background: '#fff', borderRadius: 8 }}>
@@ -181,6 +184,7 @@ const DashboardWidget: React.FC<{ businessId: number; token: string }> = ({ busi
         </div>
       )}
 
+      {/* Trends */}
       <h2 style={{ marginBottom: '1rem' }}>Dashboard Trends</h2>
       <div style={{ marginBottom: '1rem' }}>
         <button style={tabStyle(activeTab === 'weekly')} onClick={() => setActiveTab('weekly')}>
