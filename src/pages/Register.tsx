@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-interface LoginProps {
-  onLogin: (jwt: string) => void;
-}
-
-const Login: React.FC<LoginProps> = ({ onLogin }) => {
+const Register: React.FC = () => {
+  const [businessName, setBusinessName] = useState('');
+  const [country, setCountry] = useState('');
+  const [ownerName, setOwnerName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -18,31 +17,38 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     setLoading(true);
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE}/auth/login`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          business_name: businessName,
+          country,
+          name: ownerName,
+          email,
+          password,
+        }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || 'Invalid credentials');
+        throw new Error(data.error || 'Registration failed');
       }
 
       // Save JWT + business info in localStorage
-      localStorage.setItem('jwt', data.token);
-      if (data.user?.business_id) {
-        localStorage.setItem('business_id', data.user.business_id);
+      if (data.token) {
+        localStorage.setItem('jwt', data.token);
       }
-      if (data.user?.business_name) {
-        localStorage.setItem('business_name', data.user.business_name);
+      if (data.business_id) {
+        localStorage.setItem('business_id', data.business_id);
+      }
+      if (data.business_name) {
+        localStorage.setItem('business_name', data.business_name);
       }
 
-      onLogin(data.token);
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.message || 'Login failed');
+      setError(err.message || 'Registration failed');
     } finally {
       setLoading(false);
     }
@@ -59,8 +65,38 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
       }}
     >
-      <h2>Login</h2>
+      <h2>Register</h2>
       <form onSubmit={handleSubmit}>
+        <div style={{ marginBottom: '1rem' }}>
+          <label>Business Name</label>
+          <input
+            type="text"
+            value={businessName}
+            onChange={(e) => setBusinessName(e.target.value)}
+            required
+            style={{ width: '100%', padding: '0.5rem' }}
+          />
+        </div>
+        <div style={{ marginBottom: '1rem' }}>
+          <label>Country</label>
+          <input
+            type="text"
+            value={country}
+            onChange={(e) => setCountry(e.target.value)}
+            required
+            style={{ width: '100%', padding: '0.5rem' }}
+          />
+        </div>
+        <div style={{ marginBottom: '1rem' }}>
+          <label>Owner Name</label>
+          <input
+            type="text"
+            value={ownerName}
+            onChange={(e) => setOwnerName(e.target.value)}
+            required
+            style={{ width: '100%', padding: '0.5rem' }}
+          />
+        </div>
         <div style={{ marginBottom: '1rem' }}>
           <label>Email</label>
           <input
@@ -94,11 +130,11 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
             cursor: loading ? 'not-allowed' : 'pointer',
           }}
         >
-          {loading ? 'Logging in...' : 'Login'}
+          {loading ? 'Registering...' : 'Register'}
         </button>
       </form>
     </div>
   );
 };
 
-export default Login;
+export default Register;

@@ -4,6 +4,7 @@
   margin: 0 auto;
   padding: 2rem;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Card styling */
@@ -11,7 +12,9 @@
   padding: 1.5rem;
   border-radius: 8px;
   background: #fff;
+  color: #333;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 /* Sidebar links */
@@ -20,10 +23,13 @@ aside a {
   margin: 0.5rem 0;
   color: #fff;
   text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
 }
 
 aside a:hover {
   text-decoration: underline;
+  color: #ddd;
 }
 
 /* Responsive grid for summary cards */
@@ -36,10 +42,29 @@ aside a:hover {
 /* Dark mode overrides */
 .dark-mode {
   background-color: #121212;
-  color: #fff;
+  color: #f1f1f1;
 }
 
 .dark-mode .card {
   background: #1f1f1f;
+  color: #f1f1f1;
+}
+
+.dark-mode h1,
+.dark-mode h2,
+.dark-mode h3,
+.dark-mode p,
+.dark-mode span,
+.dark-mode label {
+  color: #f1f1f1;
+}
+
+.dark-mode button {
+  background-color: #333;
   color: #fff;
+  border-color: #555;
+}
+
+.dark-mode button:hover {
+  border-color: #888;
 }

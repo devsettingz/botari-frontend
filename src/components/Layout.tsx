@@ -1,13 +1,21 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { FaTachometerAlt, FaCogs, FaSignOutAlt, FaUserPlus, FaSignInAlt, FaPhone, FaThLarge } from 'react-icons/fa';
 
-const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Initialize from localStorage if available
+interface LayoutProps {
+  children: React.ReactNode;
+  token?: string;
+  onLogout?: () => void;
+}
+
+const Layout: React.FC<LayoutProps> = ({ children, token, onLogout }) => {
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('darkMode');
     return saved === 'true';
   });
 
-  // Apply/remove dark mode class on root and persist choice
+  const [menuOpen, setMenuOpen] = useState(false);
+
   useEffect(() => {
     const root = document.getElementById('root');
     if (!root) return;
@@ -19,60 +27,146 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     localStorage.setItem('darkMode', darkMode.toString());
   }, [darkMode]);
 
-  const layoutStyle = {
-    display: 'flex',
-    minHeight: '100vh',
-    transition: 'background 0.3s, color 0.3s'
-  };
+  const toggleMenu = () => setMenuOpen(!menuOpen);
 
-  const sidebarStyle = {
-    width: '220px',
-    background: darkMode ? '#1f1f1f' : '#343a40',
-    color: '#fff',
-    padding: '1rem'
-  };
-
-  const mainStyle = {
-    flex: 1,
-    padding: '2rem'
-  };
+  const navLinks = token ? (
+    <>
+      <StyledLink to="/dashboard" icon={<FaTachometerAlt />}>Dashboard</StyledLink>
+      <StyledLink to="/widget" icon={<FaThLarge />}>Widget</StyledLink>
+      <StyledLink to="/settings" icon={<FaCogs />}>Settings</StyledLink>
+      <StyledLink to="/calls" icon={<FaPhone />}>Calls</StyledLink>
+      <button
+        onClick={onLogout}
+        style={{
+          marginTop: '1rem',
+          padding: '0.75rem 1rem',
+          borderRadius: '6px',
+          border: 'none',
+          cursor: 'pointer',
+          background: '#dc3545',
+          color: '#fff',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          fontWeight: 500,
+        }}
+      >
+        <FaSignOutAlt /> Logout
+      </button>
+    </>
+  ) : (
+    <>
+      <StyledLink to="/login" icon={<FaSignInAlt />}>Login</StyledLink>
+      <StyledLink to="/register" icon={<FaUserPlus />}>Register</StyledLink>
+    </>
+  );
 
   return (
-    <div style={layoutStyle}>
-      {/* Sidebar */}
-      <aside style={sidebarStyle}>
-        <h2>Botari</h2>
-        <nav>
-          <ul style={{ listStyle: 'none', padding: 0 }}>
-            <li><a href="/" style={{ color: '#fff', textDecoration: 'none' }}>Dashboard</a></li>
-            <li><a href="/settings" style={{ color: '#fff', textDecoration: 'none' }}>Settings</a></li>
-          </ul>
-        </nav>
-        <button
-          onClick={() => setDarkMode(!darkMode)}
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      {/* Top bar for mobile */}
+      <header
+        style={{
+          background: darkMode ? '#1f1f1f' : '#007bff',
+          color: '#fff',
+          padding: '1rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
+        }}
+      >
+        <h2 style={{ margin: 0, fontWeight: 700 }}>Botari</h2>
+        <div>
+          <button
+            onClick={toggleMenu}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#fff',
+              fontSize: '1.5rem',
+              cursor: 'pointer',
+            }}
+          >
+            ☰
+          </button>
+        </div>
+      </header>
+
+      {/* Sidebar / Drawer */}
+      {menuOpen && (
+        <aside
           style={{
-            marginTop: '2rem',
-            padding: '0.5rem 1rem',
-            borderRadius: '6px',
-            border: 'none',
-            cursor: 'pointer',
-            background: darkMode ? '#007bff' : '#f8f9fa',
-            color: darkMode ? '#fff' : '#333'
+            background: darkMode ? '#1f1f1f' : '#343a40',
+            color: '#fff',
+            padding: '1rem',
+            position: 'absolute',
+            top: '60px',
+            left: 0,
+            width: '240px',
+            height: 'calc(100% - 60px)',
+            zIndex: 1000,
+            boxShadow: '2px 0 8px rgba(0,0,0,0.3)',
           }}
         >
-          {darkMode ? '🌙 Dark Mode' : '☀️ Light Mode'}
-        </button>
-      </aside>
+          <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            {navLinks}
+          </nav>
+          <button
+            onClick={() => setDarkMode(!darkMode)}
+            style={{
+              marginTop: '2rem',
+              padding: '0.75rem 1rem',
+              borderRadius: '6px',
+              border: 'none',
+              cursor: 'pointer',
+              background: darkMode ? '#007bff' : '#f8f9fa',
+              color: darkMode ? '#fff' : '#333',
+              fontWeight: 500,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+            }}
+          >
+            {darkMode ? '🌙 Dark Mode' : '☀️ Light Mode'}
+          </button>
+        </aside>
+      )}
 
       {/* Main content */}
-      <main style={mainStyle}>
-        <header style={{ marginBottom: '2rem' }}>
-          <h1>Analytics Dashboard</h1>
-        </header>
+      <main
+        style={{
+          flex: 1,
+          padding: '2rem',
+          background: darkMode ? '#121212' : '#f9f9f9',
+          transition: 'background 0.3s ease',
+        }}
+      >
         {children}
       </main>
     </div>
   );
 };
+
+// ✅ Styled link component with icon
+const StyledLink: React.FC<{ to: string; icon: React.ReactNode; children: React.ReactNode }> = ({ to, icon, children }) => (
+  <Link
+    to={to}
+    style={{
+      color: '#fff',
+      textDecoration: 'none',
+      padding: '0.75rem 1rem',
+      borderRadius: '6px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      fontWeight: 500,
+      transition: 'background 0.2s ease',
+    }}
+    onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.1)')}
+    onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+  >
+    {icon} {children}
+  </Link>
+);
 
 export default Layout;
