@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import './Navbar.css';
 
@@ -6,6 +6,7 @@ const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem('jwt');
   const businessName = localStorage.getItem('business_name');
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem('jwt');
@@ -17,7 +18,17 @@ const Navbar: React.FC = () => {
   return (
     <nav className="navbar">
       <h3 className="navbar-brand">Botari</h3>
-      <div className="navbar-links">
+
+      {/* Hamburger toggle */}
+      <button
+        className="menu-toggle"
+        onClick={() => setMenuOpen(!menuOpen)}
+        aria-label="Toggle navigation"
+      >
+        ☰
+      </button>
+
+      <div className={`navbar-links ${menuOpen ? 'open' : ''}`}>
         <NavLink to="/" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
           Home
         </NavLink>
