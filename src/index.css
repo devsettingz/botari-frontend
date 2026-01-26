@@ -1,9 +1,82 @@
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: #213547;
+  background-color: #ffffff;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #f9f9f9;
+}
+
+@media (prefers-color-scheme: dark) {
+  html, body {
+    background-color: #121212;
+  }
+}
+
+body {
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+a {
+  font-weight: 500;
+  color: #007bff;
+  text-decoration: none;
+}
+a:hover {
+  color: #0056b3;
+}
+
+h1, h2, h3, p, span, label {
+  color: inherit;
+  transition: color 0.3s ease;
+}
+
+button {
+  border-radius: 8px;
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: #007bff;
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.25s, border-color 0.25s;
+}
+button:hover {
+  background-color: #0056b3;
+}
+button:focus,
+button:focus-visible {
+  outline: 4px auto -webkit-focus-ring-color;
+}
+
+/* Layout styles */
 .app-container {
+  width: 100%;
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  background-color: var(--background-color, #f9f9f9);
-  color: var(--text-color, #1a1a1a);
+  background-color: inherit;
+  color: inherit;
 }
 
 .app-header {
@@ -54,13 +127,7 @@
   background-color: rgba(0, 0, 0, 0.05);
 }
 
-/* Dark mode overrides */
 @media (prefers-color-scheme: dark) {
-  .app-container {
-    background-color: #121212;
-    color: #e0e0e0;
-  }
-
   .app-footer {
     background-color: rgba(255, 255, 255, 0.05);
   }
