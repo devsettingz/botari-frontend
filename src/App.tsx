@@ -31,7 +31,6 @@ function App() {
     setToken(null);
   };
 
-  // ✅ JSX fix: use ReactElement instead of JSX.Element
   const ProtectedRoute = ({ element }: { element: ReactElement }) =>
     token ? element : <Navigate to="/login" replace />;
 
