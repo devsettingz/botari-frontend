@@ -17,7 +17,10 @@ const LandingPage: React.FC = () => {
 
       {/* Features Section */}
       <main className="app-main">
-        <Features />
+        <section className="features-section">
+          <h2 className="features-heading" style={{ color: '#3399ff' }}>✨ Features</h2>
+          <Features />
+        </section>
       </main>
 
       {/* Footer */}
