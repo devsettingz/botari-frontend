@@ -4,8 +4,8 @@
   font-weight: 400;
 
   color-scheme: light dark;
-  color: #213547;
-  background-color: #ffffff;
+  color: #1a1a1a;
+  background-color: #f9f9f9;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -59,7 +59,7 @@ button:focus-visible {
 /* Optional: auto-switch based on system preference */
 @media (prefers-color-scheme: dark) {
   :root {
-    color: #f1f1f1;
+    color: #e0e0e0;
     background-color: #121212;
   }
   a {
