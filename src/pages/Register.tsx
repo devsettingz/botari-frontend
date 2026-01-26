@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import './Auth.css';
 
 const Register: React.FC = () => {
   const [businessName, setBusinessName] = useState('');
@@ -35,7 +36,6 @@ const Register: React.FC = () => {
         throw new Error(data.error || 'Registration failed');
       }
 
-      // Save JWT + business info in localStorage
       if (data.token) {
         localStorage.setItem('jwt', data.token);
       }
@@ -55,81 +55,52 @@ const Register: React.FC = () => {
   };
 
   return (
-    <div
-      style={{
-        maxWidth: '400px',
-        margin: '2rem auto',
-        padding: '2rem',
-        background: '#fff',
-        borderRadius: '8px',
-        boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-      }}
-    >
-      <h2>Register</h2>
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '1rem' }}>
-          <label>Business Name</label>
-          <input
-            type="text"
-            value={businessName}
-            onChange={(e) => setBusinessName(e.target.value)}
-            required
-            style={{ width: '100%', padding: '0.5rem' }}
-          />
-        </div>
-        <div style={{ marginBottom: '1rem' }}>
-          <label>Country</label>
-          <input
-            type="text"
-            value={country}
-            onChange={(e) => setCountry(e.target.value)}
-            required
-            style={{ width: '100%', padding: '0.5rem' }}
-          />
-        </div>
-        <div style={{ marginBottom: '1rem' }}>
-          <label>Owner Name</label>
-          <input
-            type="text"
-            value={ownerName}
-            onChange={(e) => setOwnerName(e.target.value)}
-            required
-            style={{ width: '100%', padding: '0.5rem' }}
-          />
-        </div>
-        <div style={{ marginBottom: '1rem' }}>
-          <label>Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            style={{ width: '100%', padding: '0.5rem' }}
-          />
-        </div>
-        <div style={{ marginBottom: '1rem' }}>
-          <label>Password</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            style={{ width: '100%', padding: '0.5rem' }}
-          />
-        </div>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            padding: '0.5rem 1rem',
-            background: loading ? '#6c757d' : '#007bff',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '6px',
-            cursor: loading ? 'not-allowed' : 'pointer',
-          }}
-        >
+    <div className="auth-container">
+      <h2 className="auth-title">Register</h2>
+      <form onSubmit={handleSubmit} className="auth-form">
+        <label>Business Name</label>
+        <input
+          type="text"
+          value={businessName}
+          onChange={(e) => setBusinessName(e.target.value)}
+          required
+        />
+
+        <label>Country</label>
+        <input
+          type="text"
+          value={country}
+          onChange={(e) => setCountry(e.target.value)}
+          required
+        />
+
+        <label>Owner Name</label>
+        <input
+          type="text"
+          value={ownerName}
+          onChange={(e) => setOwnerName(e.target.value)}
+          required
+        />
+
+        <label>Email</label>
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+
+        <label>Password</label>
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+
+        {error && <p className="auth-error">{error}</p>}
+
+        <button type="submit" disabled={loading} className="auth-button">
           {loading ? 'Registering...' : 'Register'}
         </button>
       </form>
