@@ -1,49 +1,53 @@
 .features-section {
   padding: 2rem;
   text-align: center;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .features-heading {
   font-size: 2rem;
-  margin-bottom: 1.5rem;
-  color: inherit;
+  margin-bottom: 2rem;
+  color: #3399ff; /* Blue accent heading */
 }
 
 .features-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
 }
 
 .feature-card {
-  background-color: #ffffff;
-  color: #1a1a1a;
+  background-color: #000000; /* Black background */
+  color: #ffffff;            /* White text */
   padding: 1.5rem;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  transition: background-color 0.3s ease, color 0.3s ease;
+  border: 1px solid #3399ff; /* Blue accent border */
+  box-shadow: 0 4px 12px rgba(51, 153, 255, 0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(51, 153, 255, 0.5);
 }
 
 .feature-icon {
   font-size: 2rem;
   margin-bottom: 0.5rem;
+  color: #3399ff; /* Blue icons */
 }
 
 .feature-title {
   font-size: 1.25rem;
   font-weight: 600;
   margin-bottom: 0.5rem;
+  color: #ffffff;
 }
 
 .feature-description {
   font-size: 1rem;
   line-height: 1.4;
-}
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .feature-card {
-    background-color: #1e1e1e;
-    color: #f1f1f1;
-  }
+  color: #ffffff;
 }

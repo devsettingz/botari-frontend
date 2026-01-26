@@ -23,10 +23,9 @@ html, body {
 
 body {
   display: flex;
-  place-items: center;
+  flex-direction: column;
   min-width: 320px;
   min-height: 100vh;
-  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 a {
@@ -40,30 +39,25 @@ a:hover {
 
 h1, h2, h3, p, span, label {
   color: #ffffff;
-  transition: color 0.3s ease;
 }
 
 button {
   border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
+  border: none;
+  padding: 0.8em 1.6em;
+  font-size: 1.1em;
+  font-weight: 600;
   font-family: inherit;
   background-color: #3399ff;
   color: #ffffff;
   cursor: pointer;
-  transition: background-color 0.25s, border-color 0.25s;
+  transition: background-color 0.25s ease;
 }
 button:hover {
   background-color: #66ccff;
 }
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
 
-/* Layout styles */
+/* Layout */
 .app-container {
   width: 100%;
   min-height: 100vh;
@@ -75,13 +69,13 @@ button:focus-visible {
 
 .app-header {
   text-align: center;
-  padding: 2rem 1rem;
+  padding: 3rem 1rem 2rem;
 }
 
 .app-title {
-  font-size: 2.5rem;
+  font-size: 3rem;
   margin: 0;
-  color: #ffffff;
+  color: #3399ff; /* Blue brand accent */
 }
 
 .app-subtitle {
@@ -96,23 +90,13 @@ button:focus-visible {
   flex-direction: column;
   align-items: center;
   padding: 2rem 1rem;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .cta-button {
-  margin-bottom: 2rem;
-  border-radius: 8px;
-  border: none;
-  padding: 0.8em 1.6em;
-  font-size: 1.1em;
-  font-weight: 600;
-  background-color: #3399ff;
-  color: #ffffff;
-  cursor: pointer;
-  transition: background-color 0.25s ease;
-}
-
-.cta-button:hover {
-  background-color: #66ccff;
+  margin-top: 1.5rem;
 }
 
 .app-footer {
