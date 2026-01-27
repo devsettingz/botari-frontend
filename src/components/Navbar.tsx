@@ -7,12 +7,18 @@ const Navbar: React.FC = () => {
   const token = localStorage.getItem('jwt');
   const businessName = localStorage.getItem('business_name');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [lightMode, setLightMode] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem('jwt');
     localStorage.removeItem('business_id');
     localStorage.removeItem('business_name');
     navigate('/login');
+  };
+
+  const toggleTheme = () => {
+    document.body.classList.toggle('light-mode');
+    setLightMode(!lightMode);
   };
 
   return (
@@ -55,6 +61,11 @@ const Navbar: React.FC = () => {
             </NavLink>
           </>
         )}
+
+        {/* Theme toggle button */}
+        <button onClick={toggleTheme} className="logout-button" style={{ marginLeft: '1rem' }}>
+          {lightMode ? '🌙 Dark Mode' : '🌞 Light Mode'}
+        </button>
       </div>
     </nav>
   );
