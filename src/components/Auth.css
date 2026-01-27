@@ -1,10 +1,10 @@
 :root {
-  --bg-color: #000000;
+  --bg-color: #0d0d0d;
   --text-color: #ffffff;
-  --input-bg: #111111;
+  --input-bg: #1a1a1a;
   --input-text: #ffffff;
-  --input-border: #3399ff;
-  --accent-color: #3399ff;
+  --input-border: #ff3b3b;
+  --accent-color: #ff3b3b;
   --error-color: #ff4d4d;
   --placeholder-color: #cccccc;
 }
@@ -14,34 +14,34 @@ body.light-mode {
   --text-color: #111111;
   --input-bg: #ffffff;
   --input-text: #000000;
-  --input-border: #007bff;
-  --accent-color: #007bff;
+  --input-border: #ff3b3b;
+  --accent-color: #ff3b3b;
   --error-color: #cc0000;
   --placeholder-color: #666666;
 }
 
 .auth-container {
   max-width: 400px;
-  margin: 4rem auto;
+  margin: 3rem auto;
   padding: 2rem;
   background-color: var(--bg-color);
   color: var(--text-color);
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(255, 59, 59, 0.3);
 }
 
 .auth-title {
   text-align: center;
   margin-bottom: 2rem;
-  font-size: 1.8rem;
-  font-weight: 700;
+  font-size: 2rem;
+  font-weight: 800;
   color: var(--accent-color);
 }
 
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 1.2rem;
+  gap: 1.4rem;
 }
 
 .auth-form label {
@@ -51,8 +51,8 @@ body.light-mode {
 }
 
 .auth-form input {
-  padding: 0.75rem;
-  border-radius: 8px;
+  padding: 0.8rem;
+  border-radius: 10px;
   border: 2px solid var(--input-border);
   background-color: var(--input-bg);
   color: var(--input-text);
@@ -73,27 +73,41 @@ body.light-mode {
 
 .auth-error {
   color: var(--error-color);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 600;
+  text-align: center;
 }
 
 .auth-button {
   background-color: var(--accent-color);
   color: #ffffff;
   border: none;
-  padding: 0.9rem;
-  border-radius: 8px;
+  padding: 1rem;
+  border-radius: 10px;
   cursor: pointer;
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 1.1rem;
   transition: background-color 0.25s ease;
 }
 
 .auth-button:hover {
-  background-color: #66ccff;
+  background-color: #ff6666;
 }
 
 .auth-button:disabled {
-  background-color: #6c757d;
+  background-color: #999999;
   cursor: not-allowed;
+}
+
+.auth-footer {
+  margin-top: 1.5rem;
+  text-align: center;
+  font-size: 0.95rem;
+  color: var(--text-color);
+}
+
+.auth-footer a {
+  color: var(--accent-color);
+  font-weight: 600;
+  text-decoration: none;
 }
