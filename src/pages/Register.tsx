@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import './Auth.css';
+import '../components/Auth.css';
 
 const Register: React.FC = () => {
   const [businessName, setBusinessName] = useState('');

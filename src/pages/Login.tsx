@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import './Auth.css';
+import '../components/Auth.css';
 
 interface LoginProps {
   onLogin: (jwt: string) => void;
