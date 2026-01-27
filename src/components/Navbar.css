@@ -1,11 +1,25 @@
+:root {
+  --bg-color: #000000;
+  --text-color: #ffffff;
+  --border-color: #3399ff;
+  --accent-color: #3399ff;
+}
+
+body.light-mode {
+  --bg-color: #ffffff;
+  --text-color: #000000;   /* Black text in light mode */
+  --border-color: #3399ff;
+  --accent-color: #007bff;
+}
+
 .navbar {
   padding: 1rem 2rem;
-  background-color: #000000; /* Black background */
-  color: #ffffff;
+  background-color: var(--bg-color);
+  color: var(--text-color);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 2px solid #3399ff; /* Blue accent line */
+  border-bottom: 2px solid var(--border-color);
   position: relative;
 }
 
@@ -13,7 +27,7 @@
   margin: 0;
   font-size: 1.5rem;
   font-weight: 700;
-  color: #3399ff; /* Blue brand accent */
+  color: var(--accent-color);
 }
 
 .menu-toggle {
@@ -21,7 +35,7 @@
   background: none;
   border: none;
   font-size: 1.8rem;
-  color: #ffffff;
+  color: var(--text-color);
   cursor: pointer;
 }
 
@@ -31,7 +45,7 @@
 }
 
 .nav-link {
-  color: #ffffff;
+  color: var(--text-color);
   margin-right: 1rem;
   text-decoration: none;
   padding: 0.4rem 0.8rem;
@@ -39,24 +53,20 @@
   transition: background-color 0.25s ease, color 0.25s ease;
 }
 
-.nav-link:hover {
-  background-color: #3399ff;
-  color: #ffffff;
-}
-
+.nav-link:hover,
 .nav-link.active {
-  background-color: #3399ff;
+  background-color: var(--accent-color);
   color: #ffffff;
 }
 
 .navbar-welcome {
   margin-right: 1rem;
   font-weight: bold;
-  color: #ffffff;
+  color: var(--text-color);
 }
 
 .logout-button {
-  background-color: #3399ff;
+  background-color: var(--accent-color);
   color: #ffffff;
   border: none;
   padding: 0.5rem 1rem;
@@ -81,10 +91,10 @@
     position: absolute;
     top: 100%;
     right: 0;
-    background-color: #000000;
+    background-color: var(--bg-color);
     width: 200px;
     padding: 1rem;
-    border: 1px solid #3399ff;
+    border: 1px solid var(--border-color);
     border-radius: 6px;
   }
 
