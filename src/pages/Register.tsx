@@ -61,6 +61,7 @@ const Register: React.FC = () => {
         <label>Business Name</label>
         <input
           type="text"
+          placeholder="Your business name"
           value={businessName}
           onChange={(e) => setBusinessName(e.target.value)}
           required
@@ -69,6 +70,7 @@ const Register: React.FC = () => {
         <label>Country</label>
         <input
           type="text"
+          placeholder="Country of operation"
           value={country}
           onChange={(e) => setCountry(e.target.value)}
           required
@@ -77,6 +79,7 @@ const Register: React.FC = () => {
         <label>Owner Name</label>
         <input
           type="text"
+          placeholder="Your full name"
           value={ownerName}
           onChange={(e) => setOwnerName(e.target.value)}
           required
@@ -85,6 +88,7 @@ const Register: React.FC = () => {
         <label>Email</label>
         <input
           type="email"
+          placeholder="Business email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -93,6 +97,7 @@ const Register: React.FC = () => {
         <label>Password</label>
         <input
           type="password"
+          placeholder="Create a password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
