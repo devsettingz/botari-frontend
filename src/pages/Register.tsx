@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import './Auth.css';
 
 const Register: React.FC = () => {
@@ -109,6 +109,10 @@ const Register: React.FC = () => {
           {loading ? 'Registering...' : 'Register'}
         </button>
       </form>
+
+      <p style={{ marginTop: '1rem', textAlign: 'center' }}>
+        Already have an account? <Link to="/login" style={{ color: '#3399ff' }}>Login here</Link>
+      </p>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import './Auth.css';
 
 interface LoginProps {
@@ -76,6 +76,10 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           {loading ? 'Logging in...' : 'Login'}
         </button>
       </form>
+
+      <p style={{ marginTop: '1rem', textAlign: 'center' }}>
+        Don’t have an account? <Link to="/register" style={{ color: '#3399ff' }}>Register here</Link>
+      </p>
     </div>
   );
 };
