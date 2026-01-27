@@ -24,7 +24,7 @@ body.light-mode {
   max-width: 400px;
   margin: 3rem auto;
   padding: 2rem;
-  background-color: var(--bg-color);
+  background-color: var(--bg-color) !important;
   color: var(--text-color);
   border-radius: 12px;
   box-shadow: 0 4px 16px rgba(255, 59, 59, 0.3);
@@ -71,7 +71,7 @@ body.light-mode {
   border-color: var(--accent-color);
 }
 
-.auth-form .checkbox-row {
+.checkbox-row {
   display: flex;
   align-items: center;
   gap: 0.5rem;
