@@ -3,19 +3,21 @@
   --text-color: #ffffff;
   --input-bg: #111111;
   --input-text: #ffffff;
-  --border-color: #3399ff;
+  --input-border: #3399ff;
   --accent-color: #3399ff;
   --error-color: #ff4d4d;
+  --placeholder-color: #cccccc;
 }
 
 body.light-mode {
-  --bg-color: #f5f5f5;         /* Softer gray background */
-  --text-color: #111111;       /* Darker text */
-  --input-bg: #ffffff;         /* White input fields */
-  --input-text: #000000;       /* Black input text */
-  --border-color: #3399ff;
+  --bg-color: #f5f5f5;
+  --text-color: #111111;
+  --input-bg: #ffffff;
+  --input-text: #000000;
+  --input-border: #007bff;
   --accent-color: #007bff;
   --error-color: #cc0000;
+  --placeholder-color: #666666;
 }
 
 .auth-container {
@@ -24,21 +26,22 @@ body.light-mode {
   padding: 2rem;
   background-color: var(--bg-color);
   color: var(--text-color);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(51, 153, 255, 0.3);
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .auth-title {
   text-align: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
+  font-size: 1.8rem;
+  font-weight: 700;
   color: var(--accent-color);
 }
 
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.2rem;
 }
 
 .auth-form label {
@@ -48,32 +51,41 @@ body.light-mode {
 }
 
 .auth-form input {
-  padding: 0.6rem;
-  border-radius: 6px;
-  border: 1px solid var(--border-color);
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 2px solid var(--input-border);
   background-color: var(--input-bg);
   color: var(--input-text);
   font-size: 1rem;
   font-weight: 600;
+  outline: none;
+  transition: border-color 0.3s ease;
 }
 
 .auth-form input::placeholder {
-  color: #666666;
+  color: var(--placeholder-color);
+  font-weight: 500;
+}
+
+.auth-form input:focus {
+  border-color: var(--accent-color);
 }
 
 .auth-error {
   color: var(--error-color);
   font-size: 0.9rem;
+  font-weight: 600;
 }
 
 .auth-button {
   background-color: var(--accent-color);
   color: #ffffff;
   border: none;
-  padding: 0.8rem;
-  border-radius: 6px;
+  padding: 0.9rem;
+  border-radius: 8px;
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 1rem;
   transition: background-color 0.25s ease;
 }
 
