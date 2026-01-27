@@ -91,6 +91,17 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         </button>
       </form>
 
+      {/* Social login section */}
+      <div className="social-login">
+        <p>Or sign in with</p>
+        <div className="social-icons">
+          <button className="social-button"><i className="fab fa-facebook-f"></i></button>
+          <button className="social-button"><i className="fab fa-google"></i></button>
+          <button className="social-button"><i className="fab fa-twitter"></i></button>
+          <button className="social-button"><i className="fab fa-instagram"></i></button>
+        </div>
+      </div>
+
       <div className="auth-footer">
         Don’t have an account? <Link to="/register">Sign up</Link>
       </div>
