@@ -71,6 +71,14 @@ body.light-mode {
   border-color: var(--accent-color);
 }
 
+.auth-form .checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  color: var(--text-color);
+}
+
 .auth-error {
   color: var(--error-color);
   font-size: 0.95rem;

@@ -8,6 +8,9 @@ const Register: React.FC = () => {
   const [ownerName, setOwnerName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [agreeTerms, setAgreeTerms] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -15,6 +18,17 @@ const Register: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (!agreeTerms) {
+      setError('You must agree to the privacy policy');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -32,19 +46,11 @@ const Register: React.FC = () => {
 
       const data = await res.json();
 
-      if (!res.ok) {
-        throw new Error(data.error || 'Registration failed');
-      }
+      if (!res.ok) throw new Error(data.error || 'Registration failed');
 
-      if (data.token) {
-        localStorage.setItem('jwt', data.token);
-      }
-      if (data.business_id) {
-        localStorage.setItem('business_id', data.business_id);
-      }
-      if (data.business_name) {
-        localStorage.setItem('business_name', data.business_name);
-      }
+      if (data.token) localStorage.setItem('jwt', data.token);
+      if (data.business_id) localStorage.setItem('business_id', data.business_id);
+      if (data.business_name) localStorage.setItem('business_name', data.business_name);
 
       navigate('/dashboard');
     } catch (err: any) {
@@ -56,7 +62,7 @@ const Register: React.FC = () => {
 
   return (
     <div className="auth-container">
-      <h2 className="auth-title">Register</h2>
+      <h2 className="auth-title">Sign Up</h2>
       <form onSubmit={handleSubmit} className="auth-form">
         <label>Business Name</label>
         <input
@@ -96,23 +102,50 @@ const Register: React.FC = () => {
 
         <label>Password</label>
         <input
-          type="password"
+          type={showPassword ? 'text' : 'password'}
           placeholder="Create a password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
         />
 
+        <label>Confirm Password</label>
+        <input
+          type={showPassword ? 'text' : 'password'}
+          placeholder="Confirm your password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          required
+        />
+
+        <div className="checkbox-row">
+          <input
+            type="checkbox"
+            checked={showPassword}
+            onChange={() => setShowPassword(!showPassword)}
+          />
+          <label>Show Password</label>
+        </div>
+
+        <div className="checkbox-row">
+          <input
+            type="checkbox"
+            checked={agreeTerms}
+            onChange={() => setAgreeTerms(!agreeTerms)}
+          />
+          <label>I Agree with privacy and policy</label>
+        </div>
+
         {error && <p className="auth-error">{error}</p>}
 
         <button type="submit" disabled={loading} className="auth-button">
-          {loading ? 'Registering...' : 'Register'}
+          {loading ? 'Registering...' : 'Sign Up'}
         </button>
       </form>
 
-      <p style={{ marginTop: '1rem', textAlign: 'center' }}>
-        Already have an account? <Link to="/login" style={{ color: 'var(--accent-color)' }}>Login here</Link>
-      </p>
+      <div className="auth-footer">
+        Already have an account? <Link to="/login">Sign in</Link>
+      </div>
     </div>
   );
 };

@@ -9,6 +9,8 @@ interface LoginProps {
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -27,17 +29,11 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
       const data = await res.json();
 
-      if (!res.ok) {
-        throw new Error(data.error || 'Invalid credentials');
-      }
+      if (!res.ok) throw new Error(data.error || 'Invalid credentials');
 
       localStorage.setItem('jwt', data.token);
-      if (data.user?.business_id) {
-        localStorage.setItem('business_id', data.user.business_id);
-      }
-      if (data.user?.business_name) {
-        localStorage.setItem('business_name', data.user.business_name);
-      }
+      if (data.user?.business_id) localStorage.setItem('business_id', data.user.business_id);
+      if (data.user?.business_name) localStorage.setItem('business_name', data.user.business_name);
 
       onLogin(data.token);
       navigate('/dashboard');
@@ -50,7 +46,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
   return (
     <div className="auth-container">
-      <h2 className="auth-title">Login</h2>
+      <h2 className="auth-title">Log In</h2>
       <form onSubmit={handleSubmit} className="auth-form">
         <label>Email</label>
         <input
@@ -63,23 +59,41 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
         <label>Password</label>
         <input
-          type="password"
+          type={showPassword ? 'text' : 'password'}
           placeholder="Enter your password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
         />
 
+        <div className="checkbox-row">
+          <input
+            type="checkbox"
+            checked={showPassword}
+            onChange={() => setShowPassword(!showPassword)}
+          />
+          <label>Show Password</label>
+        </div>
+
+        <div className="checkbox-row">
+          <input
+            type="checkbox"
+            checked={rememberMe}
+            onChange={() => setRememberMe(!rememberMe)}
+          />
+          <label>Remember me</label>
+        </div>
+
         {error && <p className="auth-error">{error}</p>}
 
         <button type="submit" disabled={loading} className="auth-button">
-          {loading ? 'Logging in...' : 'Login'}
+          {loading ? 'Logging in...' : 'Log In'}
         </button>
       </form>
 
-      <p style={{ marginTop: '1rem', textAlign: 'center' }}>
-        Don’t have an account? <Link to="/register" style={{ color: 'var(--accent-color)' }}>Register here</Link>
-      </p>
+      <div className="auth-footer">
+        Don’t have an account? <Link to="/register">Sign up</Link>
+      </div>
     </div>
   );
 };
