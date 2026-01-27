@@ -10,9 +10,9 @@
 
 body.light-mode {
   --bg-color: #ffffff;
-  --text-color: #000000;
+  --text-color: #000000;   /* Black text for visibility */
   --input-bg: #f2f2f2;
-  --input-text: #000000;
+  --input-text: #000000;   /* Black input text */
   --border-color: #3399ff;
   --accent-color: #007bff;
   --error-color: #cc0000;
