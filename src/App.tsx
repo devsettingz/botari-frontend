@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./components/Layout";
+import Sidebar from "./components/Sidebar"; // new sidebar
 import DashboardWidget from "./components/DashboardWidget";
 import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Login";
@@ -37,17 +38,98 @@ function App() {
 
   return (
     <Router>
-      <Layout token={token ?? undefined} onLogout={handleLogout}>
-        <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<Login onLogin={handleLogin} />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/dashboard" element={<ProtectedRoute element={<Dashboard token={token!} />} />} />
-          <Route path="/widget" element={<ProtectedRoute element={<DashboardWidget businessId={1} token={token!} />} />} />
-          <Route path="/settings" element={<ProtectedRoute element={<Settings />} />} />
-          <Route path="/calls" element={<ProtectedRoute element={<Calls />} />} />
-        </Routes>
-      </Layout>
+      <Routes>
+        {/* Public routes with Navbar via Layout */}
+        <Route
+          path="/"
+          element={
+            <Layout token={token ?? undefined} onLogout={handleLogout}>
+              <LandingPage />
+            </Layout>
+          }
+        />
+        <Route
+          path="/login"
+          element={
+            <Layout token={token ?? undefined} onLogout={handleLogout}>
+              <Login onLogin={handleLogin} />
+            </Layout>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <Layout token={token ?? undefined} onLogout={handleLogout}>
+              <Register />
+            </Layout>
+          }
+        />
+
+        {/* Protected dashboard routes with Sidebar */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute
+              element={
+                <div style={{ display: "flex", minHeight: "100vh" }}>
+                  <Sidebar />
+                  <main style={{ flex: 1, padding: "2rem", backgroundColor: "#000000", color: "#ffffff" }}>
+                    <Dashboard token={token!} />
+                  </main>
+                </div>
+              }
+            />
+          }
+        />
+
+        <Route
+          path="/widget"
+          element={
+            <ProtectedRoute
+              element={
+                <div style={{ display: "flex", minHeight: "100vh" }}>
+                  <Sidebar />
+                  <main style={{ flex: 1, padding: "2rem", backgroundColor: "#000000", color: "#ffffff" }}>
+                    <DashboardWidget businessId={1} token={token!} />
+                  </main>
+                </div>
+              }
+            />
+          }
+        />
+
+        <Route
+          path="/settings"
+          element={
+            <ProtectedRoute
+              element={
+                <div style={{ display: "flex", minHeight: "100vh" }}>
+                  <Sidebar />
+                  <main style={{ flex: 1, padding: "2rem", backgroundColor: "#000000", color: "#ffffff" }}>
+                    <Settings />
+                  </main>
+                </div>
+              }
+            />
+          }
+        />
+
+        <Route
+          path="/calls"
+          element={
+            <ProtectedRoute
+              element={
+                <div style={{ display: "flex", minHeight: "100vh" }}>
+                  <Sidebar />
+                  <main style={{ flex: 1, padding: "2rem", backgroundColor: "#000000", color: "#ffffff" }}>
+                    <Calls />
+                  </main>
+                </div>
+              }
+            />
+          }
+        />
+      </Routes>
     </Router>
   );
 }
