@@ -111,7 +111,7 @@ const Register: React.FC = () => {
       </form>
 
       <p style={{ marginTop: '1rem', textAlign: 'center' }}>
-        Already have an account? <Link to="/login" style={{ color: '#3399ff' }}>Login here</Link>
+        Already have an account? <Link to="/login" style={{ color: 'var(--accent-color)' }}>Login here</Link>
       </p>
     </div>
   );

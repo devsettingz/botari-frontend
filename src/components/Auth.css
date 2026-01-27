@@ -1,10 +1,30 @@
+:root {
+  --bg-color: #000000;
+  --text-color: #ffffff;
+  --input-bg: #111111;
+  --input-text: #ffffff;
+  --border-color: #3399ff;
+  --accent-color: #3399ff;
+  --error-color: #ff4d4d;
+}
+
+body.light-mode {
+  --bg-color: #ffffff;
+  --text-color: #000000;
+  --input-bg: #f2f2f2;
+  --input-text: #000000;
+  --border-color: #3399ff;
+  --accent-color: #007bff;
+  --error-color: #cc0000;
+}
+
 .auth-container {
   max-width: 400px;
   margin: 4rem auto;
   padding: 2rem;
-  background-color: #000000;
-  color: #ffffff;
-  border: 1px solid #3399ff;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(51, 153, 255, 0.3);
 }
@@ -12,7 +32,7 @@
 .auth-title {
   text-align: center;
   margin-bottom: 1.5rem;
-  color: #3399ff;
+  color: var(--accent-color);
 }
 
 .auth-form {
@@ -23,15 +43,15 @@
 
 .auth-form label {
   font-weight: 600;
-  color: #ffffff;
+  color: var(--text-color);
 }
 
 .auth-form input {
   padding: 0.6rem;
   border-radius: 6px;
-  border: 1px solid #3399ff;
-  background-color: #111111;
-  color: #ffffff;
+  border: 1px solid var(--border-color);
+  background-color: var(--input-bg);
+  color: var(--input-text);
 }
 
 .auth-form input::placeholder {
@@ -39,12 +59,12 @@
 }
 
 .auth-error {
-  color: #ff4d4d;
+  color: var(--error-color);
   font-size: 0.9rem;
 }
 
 .auth-button {
-  background-color: #3399ff;
+  background-color: var(--accent-color);
   color: #ffffff;
   border: none;
   padding: 0.8rem;

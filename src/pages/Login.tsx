@@ -78,7 +78,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       </form>
 
       <p style={{ marginTop: '1rem', textAlign: 'center' }}>
-        Don’t have an account? <Link to="/register" style={{ color: '#3399ff' }}>Register here</Link>
+        Don’t have an account? <Link to="/register" style={{ color: 'var(--accent-color)' }}>Register here</Link>
       </p>
     </div>
   );
