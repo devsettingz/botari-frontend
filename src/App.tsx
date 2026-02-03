@@ -15,45 +15,60 @@ import { useState, useEffect } from "react";
 import type { ReactElement } from "react";
 
 const DashboardLayout = ({ children }: { children: ReactElement }) => (
-  <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "#000000" }}>
+  <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "#0A0A0F" }}>
     <Sidebar />
-    <main style={{ flex: 1, padding: "2rem", backgroundColor: "#000000", color: "#ffffff" }}>
+    <main style={{ flex: 1, padding: "2rem", backgroundColor: "#0A0A0F", color: "#ffffff" }}>
       {children}
     </main>
   </div>
 );
 
 const ProtectedRoute = ({ children }: { children: ReactElement }) => {
-  const [token, setToken] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [isAuth, setIsAuth] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem("jwt");
-    if (stored) setToken(stored);
-    setLoading(false);
+    // Check for both jwt and token
+    const token = localStorage.getItem("jwt") || localStorage.getItem("token");
+    setIsAuth(!!token);
   }, []);
 
-  if (loading) return <div style={{ background: "#000", color: "#fff", height: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>Loading Botari...</div>;
-  return token ? children : <Navigate to="/login" replace />;
+  if (isAuth === null) return (
+    <div style={{ 
+      background: "#0A0A0F", 
+      color: "#fff", 
+      height: "100vh", 
+      display: "flex", 
+      alignItems: "center", 
+      justifyContent: "center" 
+    }}>
+      Loading Botari...
+    </div>
+  );
+  
+  return isAuth ? children : <Navigate to="/login" replace />;
 };
 
 function App() {
   const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem("jwt");
+    const stored = localStorage.getItem("jwt") || localStorage.getItem("token");
     if (stored) setToken(stored);
   }, []);
 
   const handleLogin = (jwt: string) => {
     localStorage.setItem("jwt", jwt);
+    localStorage.setItem("token", jwt); // Store both for compatibility
     setToken(jwt);
   };
 
   const handleLogout = () => {
+    // Clear all possible auth keys
     localStorage.removeItem("jwt");
+    localStorage.removeItem("token");
     localStorage.removeItem("business_id");
     localStorage.removeItem("business_name");
+    localStorage.removeItem("user_name");
     setToken(null);
   };
 
@@ -66,7 +81,7 @@ function App() {
         <Route path="/register" element={<Layout token={token ?? undefined} onLogout={handleLogout}><Register /></Layout>} />
 
         {/* Protected Routes */}
-        <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout><Dashboard token={token!} /></DashboardLayout></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout><Dashboard token={token || undefined} /></DashboardLayout></ProtectedRoute>} />
         <Route path="/team" element={<ProtectedRoute><DashboardLayout><Team /></DashboardLayout></ProtectedRoute>} />
         <Route path="/conversations" element={<ProtectedRoute><DashboardLayout><Conversations /></DashboardLayout></ProtectedRoute>} />
         <Route path="/calls" element={<ProtectedRoute><DashboardLayout><Calls /></DashboardLayout></ProtectedRoute>} />

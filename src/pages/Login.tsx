@@ -46,12 +46,29 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
       if (!res.ok) throw new Error(data.error || 'Invalid credentials');
 
-      // Store auth data
+      // Debug log
+      console.log('Login successful, user data:', data.user);
+
+      // Store auth data with fallbacks to prevent "undefined" strings
       localStorage.setItem('jwt', data.token);
-      localStorage.setItem('token', data.token); // For consistency with Register
-      if (data.user?.business_id) localStorage.setItem('business_id', data.user.business_id.toString());
-      if (data.user?.business_name) localStorage.setItem('business_name', data.user.business_name);
-      if (data.user?.name) localStorage.setItem('user_name', data.user.name);
+      localStorage.setItem('token', data.token);
+      
+      if (data.user?.business_id) {
+        localStorage.setItem('business_id', data.user.business_id.toString());
+      }
+      
+      // Fix: Ensure we don't store the string "undefined"
+      const businessName = data.user?.business_name;
+      if (businessName && businessName !== 'undefined' && businessName !== 'null') {
+        localStorage.setItem('business_name', businessName);
+      } else {
+        localStorage.setItem('business_name', 'Founder');
+      }
+      
+      const userName = data.user?.name;
+      if (userName && userName !== 'undefined' && userName !== 'null') {
+        localStorage.setItem('user_name', userName);
+      }
 
       // Call parent callback if provided
       if (onLogin) onLogin(data.token);

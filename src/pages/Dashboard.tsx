@@ -1,37 +1,70 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Users, MessageCircle, TrendingUp, Zap, ArrowRight, Settings, Plus, Activity, BarChart3 } from 'lucide-react';
+import { 
+  Users, 
+  MessageCircle, 
+  TrendingUp, 
+  Zap, 
+  ArrowRight, 
+  Settings, 
+  Plus, 
+  Activity, 
+  BarChart3,
+  LogOut
+} from 'lucide-react';
 import DashboardWidget from '../components/DashboardWidget';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 interface DashboardProps {
-  token: string;
+  token?: string;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ token }) => {
+const Dashboard: React.FC<DashboardProps> = ({ token: propToken }) => {
+  // Get token from props or localStorage for safety
+  const authToken = propToken || localStorage.getItem('jwt') || localStorage.getItem('token') || '';
+  
   const [businessId, setBusinessId] = useState<number | null>(null);
-  const [businessName, setBusinessName] = useState<string | null>(null);
+  const [businessName, setBusinessName] = useState<string>('Founder');
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [whatsappStatus, setWhatsappStatus] = useState<'disconnected' | 'connecting' | 'connected'>('disconnected');
   const [activeEmployees, setActiveEmployees] = useState<any[]>([]);
   const [stats, setStats] = useState({ conversations: 0, messages: 0, responseTime: 0 });
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [showAnalytics, setShowAnalytics] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [whatsappError, setWhatsappError] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
     const storedId = localStorage.getItem('business_id');
     const storedName = localStorage.getItem('business_name');
+    const storedToken = localStorage.getItem('jwt') || localStorage.getItem('token');
+    
+    console.log('Dashboard loaded with:', { storedId, storedName, storedToken });
+    
+    if (!storedToken) {
+      console.log('No token found, redirecting to login');
+      navigate('/login');
+      return;
+    }
     
     if (storedId) {
       const parsedId = parseInt(storedId, 10);
       setBusinessId(parsedId);
-      fetchDashboardData(parsedId);
+      fetchDashboardData(parsedId, storedToken);
+    } else {
+      setLoading(false);
     }
-    if (storedName) setBusinessName(storedName);
-  }, []);
+    
+    // Fix: Check for "undefined" string or null/undefined values
+    if (storedName && storedName !== 'undefined' && storedName !== 'null' && storedName !== '') {
+      setBusinessName(storedName);
+    } else {
+      setBusinessName('Founder');
+    }
+  }, [navigate]);
 
   useEffect(() => {
     if (whatsappStatus === 'connecting') {
@@ -40,11 +73,12 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
     }
   }, [whatsappStatus]);
 
-  // FIXED: Added underscore prefix to indicate intentionally unused parameter
-  const fetchDashboardData = async (_bid: number) => {
+  // FIXED: Added underscore prefix to fix "declared but never read" warning
+  const fetchDashboardData = async (_bid: number, tokenForAuth: string) => {
     try {
+      setLoading(true);
       const empRes = await axios.get(`${API_URL}/api/employees/my-team`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${tokenForAuth}` }
       });
       setActiveEmployees(empRes.data.filter((e: any) => e.is_hired));
 
@@ -57,34 +91,67 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
       ]);
     } catch (err) {
       console.error('Dashboard load error:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
   const connectWhatsApp = async () => {
+    const currentToken = localStorage.getItem('jwt') || localStorage.getItem('token');
+    if (!currentToken) {
+      alert('Please log in again');
+      navigate('/login');
+      return;
+    }
+    
     setWhatsappStatus('connecting');
+    setWhatsappError('');
+    
     try {
       const res = await axios.post(`${API_URL}/api/whatsapp/connect`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${currentToken}` }
       });
       if (res.data.qrCode) {
         setQrCode(res.data.qrCode);
       }
-    } catch (err) {
-      alert('Failed to start WhatsApp connection');
+    } catch (err: any) {
+      console.error('WhatsApp connection error:', err);
+      const errorMsg = err.response?.data?.error || err.message || 'Failed to connect';
+      setWhatsappError(errorMsg);
+      alert('Failed to start WhatsApp connection: ' + errorMsg);
       setWhatsappStatus('disconnected');
     }
   };
 
   const checkWhatsAppStatus = async () => {
+    const currentToken = localStorage.getItem('jwt') || localStorage.getItem('token');
+    if (!currentToken) return;
+    
     try {
       const res = await axios.get(`${API_URL}/api/whatsapp/status`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${currentToken}` }
       });
       if (res.data.connected) {
         setWhatsappStatus('connected');
         setQrCode(null);
       }
     } catch (e) {}
+  };
+
+  const handleLogout = () => {
+    // Clear all auth data
+    localStorage.removeItem('jwt');
+    localStorage.removeItem('token');
+    localStorage.removeItem('business_id');
+    localStorage.removeItem('business_name');
+    localStorage.removeItem('user_name');
+    
+    // Navigate to login
+    navigate('/login');
+  };
+
+  const handleSettings = () => {
+    navigate('/settings');
   };
 
   const getGreeting = () => {
@@ -94,9 +161,16 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
     return 'Good evening';
   };
 
-  if (!businessId) {
+  if (loading && !businessId) {
     return (
-      <div style={{ padding: '2rem', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#0A0A0F' }}>
+      <div style={{ 
+        minHeight: '100vh', 
+        backgroundColor: '#0A0A0F',
+        color: 'white', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center'
+      }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ 
             width: '50px', height: '50px',
@@ -106,7 +180,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
             animation: 'spin 1s linear infinite',
             margin: '0 auto 20px'
           }} />
-          <p style={{ color: '#666' }}>Setting up your workspace...</p>
+          <p style={{ color: '#666' }}>Loading dashboard...</p>
         </div>
       </div>
     );
@@ -120,6 +194,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
       fontFamily: 'Inter, -apple-system, sans-serif',
       padding: '32px'
     }}>
+      {/* Animated Background */}
       <div style={{
         position: 'fixed',
         top: 0, left: 0, right: 0, bottom: 0,
@@ -134,10 +209,18 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
 
       <div style={{ position: 'relative', zIndex: 1, maxWidth: '1400px', margin: '0 auto' }}>
         
+        {/* Header */}
         <div style={{ marginBottom: '40px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'flex-start', 
+            marginBottom: '8px' 
+          }}>
             <div>
-              <p style={{ color: '#666', fontSize: '14px', marginBottom: '8px' }}>{getGreeting()},</p>
+              <p style={{ color: '#666', fontSize: '14px', marginBottom: '8px' }}>
+                {getGreeting()},
+              </p>
               <h1 style={{ 
                 margin: 0, 
                 fontSize: '40px', 
@@ -146,10 +229,11 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent'
               }}>
-                {businessName ?? 'Founder'}
+                {businessName}
               </h1>
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
+              {/* Analytics Toggle Button */}
               <button 
                 onClick={() => setShowAnalytics(!showAnalytics)}
                 style={{
@@ -162,26 +246,52 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px'
-                }}
+                  gap: '8px',
+                  transition: 'all 0.2s'
+                }} 
               >
                 <BarChart3 size={16} /> 
                 {showAnalytics ? 'Hide Analytics' : 'View Analytics'}
               </button>
 
-              <button style={{
-                padding: '12px 20px',
-                background: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: '10px',
-                color: '#fff',
-                fontSize: '14px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
+              {/* Settings Button - NOW WORKING */}
+              <button 
+                onClick={handleSettings}
+                style={{
+                  padding: '12px 20px',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '10px',
+                  color: '#fff',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  transition: 'all 0.2s'
+                }}
+              >
                 <Settings size={16} /> Settings
+              </button>
+
+              {/* Logout Button - NEW */}
+              <button 
+                onClick={handleLogout}
+                style={{
+                  padding: '12px 20px',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '10px',
+                  color: '#fff',
+                  fontSize: '14px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  transition: 'all 0.2s'
+                }}
+              >
+                <LogOut size={16} /> Logout
               </button>
               
               <button onClick={() => navigate('/team')} style={{
@@ -195,7 +305,8 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px'
+                gap: '8px',
+                transition: 'all 0.2s'
               }}>
                 <Plus size={16} /> Hire Employee
               </button>
@@ -206,62 +317,90 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
           </p>
         </div>
 
+        {/* CONDITIONAL RENDER: Analytics View vs Dashboard View */}
         {showAnalytics && businessId ? (
-          <DashboardWidget businessId={businessId} token={token} />
+          <DashboardWidget businessId={businessId} token={authToken} />
         ) : (
           <>
+            {/* Stats Grid */}
             <div style={{ 
               display: 'grid', 
               gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
               gap: '20px',
               marginBottom: '32px'
             }}>
+              {/* AI Employees Card */}
               <div style={{
                 background: 'linear-gradient(145deg, rgba(226,114,91,0.1) 0%, rgba(26,26,36,0.5) 100%)',
                 border: '1px solid rgba(226,114,91,0.2)',
                 borderRadius: '20px',
                 padding: '24px',
+                position: 'relative',
+                overflow: 'hidden',
+                transition: 'all 0.3s',
                 cursor: 'pointer'
               }} onClick={() => navigate('/team')}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-                  <div style={{
-                    width: '48px', height: '48px',
-                    background: 'rgba(226,114,91,0.2)',
-                    borderRadius: '12px',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    color: '#E2725B'
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'flex-start', 
+                    marginBottom: '16px' 
                   }}>
-                    <Users size={24} />
-                  </div>
-                  {activeEmployees.length > 0 && (
-                    <span style={{
-                      padding: '6px 12px',
-                      background: 'rgba(74,222,128,0.1)',
-                      color: '#4ADE80',
-                      borderRadius: '20px',
-                      fontSize: '12px',
-                      fontWeight: 500
+                    <div style={{
+                      width: '48px', height: '48px',
+                      background: 'rgba(226,114,91,0.2)',
+                      borderRadius: '12px',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: '#E2725B'
                     }}>
-                      All Active
-                    </span>
-                  )}
-                </div>
-                <div style={{ fontSize: '14px', color: '#888', marginBottom: '8px' }}>AI Employees</div>
-                <div style={{ fontSize: '36px', fontWeight: 700, color: '#fff', marginBottom: '8px' }}>
-                  {activeEmployees.length}
-                </div>
-                <div style={{ fontSize: '13px', color: activeEmployees.length > 0 ? '#4ADE80' : '#E2725B' }}>
-                  {activeEmployees.length > 0 ? '✓ Team operational' : '⚠ Hire your first employee'}
+                      <Users size={24} />
+                    </div>
+                    {activeEmployees.length > 0 && (
+                      <span style={{
+                        padding: '6px 12px',
+                        background: 'rgba(74,222,128,0.1)',
+                        color: '#4ADE80',
+                        borderRadius: '20px',
+                        fontSize: '12px',
+                        fontWeight: 500
+                      }}>
+                        All Active
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: '14px', color: '#888', marginBottom: '8px' }}>AI Employees</div>
+                  <div style={{ 
+                    fontSize: '36px', 
+                    fontWeight: 700, 
+                    color: '#fff', 
+                    marginBottom: '8px' 
+                  }}>
+                    {activeEmployees.length}
+                  </div>
+                  <div style={{ 
+                    fontSize: '13px', 
+                    color: activeEmployees.length > 0 ? '#4ADE80' : '#E2725B' 
+                  }}>
+                    {activeEmployees.length > 0 ? '✓ Team operational' : '⚠ Hire your first employee'}
+                  </div>
                 </div>
               </div>
 
+              {/* Conversations Card */}
               <div style={{
                 background: 'rgba(26, 26, 36, 0.5)',
                 border: '1px solid rgba(255,255,255,0.08)',
                 borderRadius: '20px',
-                padding: '24px'
+                padding: '24px',
+                transition: 'all 0.3s'
               }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'flex-start', 
+                  marginBottom: '16px' 
+                }}>
                   <div style={{
                     width: '48px', height: '48px',
                     background: 'rgba(74,144,255,0.1)',
@@ -271,12 +410,25 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                   }}>
                     <MessageCircle size={24} />
                   </div>
-                  <span style={{ fontSize: '12px', color: '#4ADE80', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span style={{ 
+                    fontSize: '12px', 
+                    color: '#4ADE80', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '4px' 
+                  }}>
                     <TrendingUp size={12} /> +12%
                   </span>
                 </div>
-                <div style={{ fontSize: '14px', color: '#888', marginBottom: '8px' }}>Today's Conversations</div>
-                <div style={{ fontSize: '36px', fontWeight: 700, color: '#fff', marginBottom: '8px' }}>
+                <div style={{ fontSize: '14px', color: '#888', marginBottom: '8px' }}>
+                  Today's Conversations
+                </div>
+                <div style={{ 
+                  fontSize: '36px', 
+                  fontWeight: 700, 
+                  color: '#fff', 
+                  marginBottom: '8px' 
+                }}>
                   {stats.conversations}
                 </div>
                 <div style={{ fontSize: '13px', color: '#666' }}>
@@ -284,13 +436,20 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                 </div>
               </div>
 
+              {/* Messages Card */}
               <div style={{
                 background: 'rgba(26, 26, 36, 0.5)',
                 border: '1px solid rgba(255,255,255,0.08)',
                 borderRadius: '20px',
-                padding: '24px'
+                padding: '24px',
+                transition: 'all 0.3s'
               }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'flex-start', 
+                  marginBottom: '16px' 
+                }}>
                   <div style={{
                     width: '48px', height: '48px',
                     background: 'rgba(155,89,182,0.1)',
@@ -301,8 +460,15 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                     <Activity size={24} />
                   </div>
                 </div>
-                <div style={{ fontSize: '14px', color: '#888', marginBottom: '8px' }}>Messages Handled</div>
-                <div style={{ fontSize: '36px', fontWeight: 700, color: '#fff', marginBottom: '8px' }}>
+                <div style={{ fontSize: '14px', color: '#888', marginBottom: '8px' }}>
+                  Messages Handled
+                </div>
+                <div style={{ 
+                  fontSize: '36px', 
+                  fontWeight: 700, 
+                  color: '#fff', 
+                  marginBottom: '8px' 
+                }}>
                   {stats.messages}
                 </div>
                 <div style={{ fontSize: '13px', color: '#4ADE80' }}>
@@ -310,13 +476,20 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                 </div>
               </div>
 
+              {/* Response Time Card */}
               <div style={{
                 background: 'rgba(26, 26, 36, 0.5)',
                 border: '1px solid rgba(255,255,255,0.08)',
                 borderRadius: '20px',
-                padding: '24px'
+                padding: '24px',
+                transition: 'all 0.3s'
               }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'flex-start', 
+                  marginBottom: '16px' 
+                }}>
                   <div style={{
                     width: '48px', height: '48px',
                     background: 'rgba(243,156,18,0.1)',
@@ -327,8 +500,15 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                     <Zap size={24} />
                   </div>
                 </div>
-                <div style={{ fontSize: '14px', color: '#888', marginBottom: '8px' }}>Avg Response Time</div>
-                <div style={{ fontSize: '36px', fontWeight: 700, color: '#fff', marginBottom: '8px' }}>
+                <div style={{ fontSize: '14px', color: '#888', marginBottom: '8px' }}>
+                  Avg Response Time
+                </div>
+                <div style={{ 
+                  fontSize: '36px', 
+                  fontWeight: 700, 
+                  color: '#fff', 
+                  marginBottom: '8px' 
+                }}>
                   {stats.responseTime}s
                 </div>
                 <div style={{ fontSize: '13px', color: '#666' }}>
@@ -338,15 +518,24 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '24px' }}>
+              
+              {/* Main Content Area */}
               <div>
+                {/* WhatsApp Connection */}
                 <div style={{
                   background: 'rgba(26, 26, 36, 0.5)',
                   border: `1px solid ${whatsappStatus === 'connected' ? 'rgba(74,222,128,0.3)' : 'rgba(255,255,255,0.08)'}`,
                   borderRadius: '20px',
                   padding: '28px',
-                  marginBottom: '24px'
+                  marginBottom: '24px',
+                  transition: 'all 0.3s'
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '16px', 
+                    marginBottom: '20px' 
+                  }}>
                     <div style={{
                       width: '56px', height: '56px',
                       background: whatsappStatus === 'connected' ? 'rgba(74,222,128,0.1)' : 'rgba(226,114,91,0.1)',
@@ -357,11 +546,18 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                       {whatsappStatus === 'connected' ? '✅' : '💬'}
                     </div>
                     <div style={{ flex: 1 }}>
-                      <h3 style={{ margin: '0 0 4px 0', color: '#fff', fontSize: '18px', fontWeight: 600 }}>
+                      <h3 style={{ 
+                        margin: '0 0 4px 0', 
+                        color: '#fff', 
+                        fontSize: '18px', 
+                        fontWeight: 600 
+                      }}>
                         WhatsApp Business
                       </h3>
                       <p style={{ margin: 0, color: '#888', fontSize: '14px' }}>
-                        {whatsappStatus === 'connected' ? 'Connected and monitoring messages' : 'Connect to activate Amina'}
+                        {whatsappStatus === 'connected' 
+                          ? 'Connected and monitoring messages' 
+                          : 'Connect to activate Amina'}
                       </p>
                     </div>
                     {whatsappStatus === 'connected' && (
@@ -378,6 +574,21 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                     )}
                   </div>
 
+                  {/* Error Message */}
+                  {whatsappError && (
+                    <div style={{
+                      padding: '12px 16px',
+                      background: 'rgba(239, 68, 68, 0.1)',
+                      border: '1px solid rgba(239, 68, 68, 0.2)',
+                      borderRadius: '12px',
+                      color: '#EF4444',
+                      fontSize: '14px',
+                      marginBottom: '16px'
+                    }}>
+                      ⚠️ {whatsappError}
+                    </div>
+                  )}
+
                   {whatsappStatus === 'disconnected' && (
                     <button
                       onClick={connectWhatsApp}
@@ -391,6 +602,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                         fontWeight: 600,
                         fontSize: '15px',
                         cursor: 'pointer',
+                        transition: 'all 0.2s',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -416,16 +628,26 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                           <p style={{ color: '#888' }}>Generating secure connection...</p>
                         </>
                       ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <div style={{ 
+                          display: 'flex', 
+                          flexDirection: 'column', 
+                          alignItems: 'center' 
+                        }}>
                           <div style={{ 
                             backgroundColor: '#fff', 
                             padding: '20px', 
                             borderRadius: '16px', 
-                            marginBottom: '20px'
+                            marginBottom: '20px',
+                            boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
                           }}>
                             <img src={qrCode} alt="WhatsApp QR" style={{ width: '220px', height: '220px' }} />
                           </div>
-                          <p style={{ color: '#888', fontSize: '14px', textAlign: 'center', maxWidth: '300px' }}>
+                          <p style={{ 
+                            color: '#888', 
+                            fontSize: '14px', 
+                            textAlign: 'center', 
+                            maxWidth: '300px' 
+                          }}>
                             Open WhatsApp on your phone → Settings → Linked Devices → Link a Device
                           </p>
                         </div>
@@ -434,9 +656,18 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                   )}
 
                   {whatsappStatus === 'connected' && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px', background: 'rgba(74,222,128,0.05)', borderRadius: '12px' }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '16px', 
+                      padding: '16px', 
+                      background: 'rgba(74,222,128,0.05)', 
+                      borderRadius: '12px' 
+                    }}>
                       <div style={{ flex: 1 }}>
-                        <div style={{ color: '#4ADE80', fontSize: '14px', marginBottom: '4px' }}>✓ Connected</div>
+                        <div style={{ color: '#4ADE80', fontSize: '14px', marginBottom: '4px' }}>
+                          ✓ Connected
+                        </div>
                         <div style={{ color: '#666', fontSize: '13px' }}>+234 ••• ••• ••45</div>
                       </div>
                       <button style={{
@@ -446,7 +677,8 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                         borderRadius: '8px',
                         color: '#888',
                         fontSize: '13px',
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
                       }}>
                         Manage
                       </button>
@@ -454,13 +686,19 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                   )}
                 </div>
 
+                {/* Recent Activity */}
                 <div style={{
                   background: 'rgba(26, 26, 36, 0.5)',
                   border: '1px solid rgba(255,255,255,0.08)',
                   borderRadius: '20px',
                   padding: '28px'
                 }}>
-                  <h3 style={{ margin: '0 0 24px 0', color: '#fff', fontSize: '18px', fontWeight: 600 }}>
+                  <h3 style={{ 
+                    margin: '0 0 24px 0', 
+                    color: '#fff', 
+                    fontSize: '18px', 
+                    fontWeight: 600 
+                  }}>
                     Recent Activity
                   </h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -471,7 +709,10 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                         gap: '16px',
                         padding: '16px',
                         background: 'rgba(255,255,255,0.03)',
-                        borderRadius: '12px'
+                        borderRadius: '12px',
+                        transition: 'all 0.2s',
+                        cursor: 'pointer',
+                        border: '1px solid transparent'
                       }}>
                         <div style={{
                           width: '40px', height: '40px',
@@ -486,8 +727,12 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                            activity.type === 'appointment' ? <Activity size={18} /> : <Zap size={18} />}
                         </div>
                         <div style={{ flex: 1 }}>
-                          <div style={{ color: '#fff', fontSize: '14px', marginBottom: '2px' }}>{activity.text}</div>
-                          <div style={{ color: '#666', fontSize: '12px' }}>{activity.time} • {activity.employee}</div>
+                          <div style={{ color: '#fff', fontSize: '14px', marginBottom: '2px' }}>
+                            {activity.text}
+                          </div>
+                          <div style={{ color: '#666', fontSize: '12px' }}>
+                            {activity.time} • {activity.employee}
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -495,7 +740,9 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                 </div>
               </div>
 
+              {/* Sidebar */}
               <div>
+                {/* Quick Actions */}
                 <div style={{
                   background: 'rgba(26, 26, 36, 0.5)',
                   border: '1px solid rgba(255,255,255,0.08)',
@@ -503,14 +750,33 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                   padding: '24px',
                   marginBottom: '24px'
                 }}>
-                  <h3 style={{ margin: '0 0 20px 0', color: '#fff', fontSize: '16px', fontWeight: 600 }}>
+                  <h3 style={{ 
+                    margin: '0 0 20px 0', 
+                    color: '#fff', 
+                    fontSize: '16px', 
+                    fontWeight: 600 
+                  }}>
                     Quick Actions
                   </h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {[
-                      { icon: <Users size={18} />, label: 'Hire Team Members', desc: 'Add more AI employees', action: () => navigate('/team') },
-                      { icon: <MessageCircle size={18} />, label: 'View Conversations', desc: 'Check all messages', action: () => navigate('/conversations') },
-                      { icon: <Settings size={18} />, label: 'AI Settings', desc: 'Customize responses', action: () => {} }
+                    {[{
+                        icon: <Users size={18} />, 
+                        label: 'Hire Team Members', 
+                        desc: 'Add more AI employees', 
+                        action: () => navigate('/team') 
+                      },
+                      { 
+                        icon: <MessageCircle size={18} />, 
+                        label: 'View Conversations', 
+                        desc: 'Check all messages', 
+                        action: () => navigate('/conversations') 
+                      },
+                      { 
+                        icon: <Settings size={18} />, 
+                        label: 'AI Settings', 
+                        desc: 'Customize responses', 
+                        action: handleSettings 
+                      }
                     ].map((item, idx) => (
                       <button
                         key={idx}
@@ -526,12 +792,15 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                           display: 'flex',
                           alignItems: 'center',
                           gap: '12px',
+                          transition: 'all 0.2s',
                           width: '100%'
                         }}
                       >
                         <div style={{ color: '#E2725B' }}>{item.icon}</div>
                         <div style={{ flex: 1 }}>
-                          <div style={{ fontWeight: 500, fontSize: '14px', marginBottom: '2px' }}>{item.label}</div>
+                          <div style={{ fontWeight: 500, fontSize: '14px', marginBottom: '2px' }}>
+                            {item.label}
+                          </div>
                           <div style={{ fontSize: '12px', color: '#666' }}>{item.desc}</div>
                         </div>
                         <ArrowRight size={16} color="#666" />
@@ -540,49 +809,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                   </div>
                 </div>
 
-                {activeEmployees.length > 0 && (
-                  <div style={{
-                    background: 'rgba(26, 26, 36, 0.5)',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    borderRadius: '20px',
-                    padding: '24px'
-                  }}>
-                    <h3 style={{ margin: '0 0 20px 0', color: '#fff', fontSize: '16px', fontWeight: 600 }}>
-                      Active Workforce
-                    </h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                      {activeEmployees.map((emp) => (
-                        <div key={emp.id} style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '12px',
-                          padding: '14px',
-                          background: 'rgba(74,222,128,0.05)',
-                          border: '1px solid rgba(74,222,128,0.1)',
-                          borderRadius: '12px'
-                        }}>
-                          <div style={{
-                            width: '44px', height: '44px',
-                            borderRadius: '50%',
-                            background: 'linear-gradient(135deg, #E2725B 0%, #FF8E53 100%)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '18px', fontWeight: 'bold', color: '#fff'
-                          }}>
-                            {emp.name[0].toUpperCase()}
-                          </div>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ color: '#fff', fontWeight: 500, fontSize: '14px' }}>{emp.display_name}</div>
-                            <div style={{ color: '#4ADE80', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              <span style={{ width: '6px', height: '6px', background: '#4ADE80', borderRadius: '50%' }} />
-                              Online
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
+                {/* Upgrade CTA */}
                 {activeEmployees.length === 0 && (
                   <div style={{
                     background: 'linear-gradient(145deg, rgba(226,114,91,0.1) 0%, rgba(26,26,36,0.5) 100%)',
@@ -592,21 +819,27 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                     textAlign: 'center'
                   }}>
                     <div style={{ fontSize: '40px', marginBottom: '12px' }}>👋</div>
-                    <h4 style={{ color: '#fff', marginBottom: '8px', fontSize: '16px' }}>Start with Amina</h4>
+                    <h4 style={{ color: '#fff', marginBottom: '8px', fontSize: '16px' }}>
+                      Start with Amina
+                    </h4>
                     <p style={{ color: '#888', fontSize: '13px', marginBottom: '16px', lineHeight: '1.5' }}>
                       Your WhatsApp sales specialist. $49/month.
                     </p>
-                    <button onClick={() => navigate('/team')} style={{
-                      width: '100%',
-                      padding: '12px',
-                      background: 'linear-gradient(135deg, #E2725B 0%, #FF8E53 100%)',
-                      border: 'none',
-                      borderRadius: '10px',
-                      color: '#000',
-                      fontWeight: 600,
-                      fontSize: '14px',
-                      cursor: 'pointer'
-                    }}>
+                    <button 
+                      onClick={() => navigate('/team')} 
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        background: 'linear-gradient(135deg, #E2725B 0%, #FF8E53 100%)',
+                        border: 'none',
+                        borderRadius: '10px',
+                        color: '#000',
+                        fontWeight: 600,
+                        fontSize: '14px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                    >
                       Hire Now
                     </button>
                   </div>
