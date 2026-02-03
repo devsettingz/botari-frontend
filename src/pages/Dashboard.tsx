@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { Users, MessageCircle, TrendingUp, Zap, ArrowRight, Settings, Plus, Activity, BarChart3 } from 'lucide-react';
-import DashboardWidget from '../components/DashboardWidget'; // ADD THIS IMPORT
+import DashboardWidget from '../components/DashboardWidget';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -18,7 +18,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
   const [activeEmployees, setActiveEmployees] = useState<any[]>([]);
   const [stats, setStats] = useState({ conversations: 0, messages: 0, responseTime: 0 });
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
-  const [showAnalytics, setShowAnalytics] = useState(false); // Toggle for analytics view
+  const [showAnalytics, setShowAnalytics] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,8 +26,9 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
     const storedName = localStorage.getItem('business_name');
     
     if (storedId) {
-      setBusinessId(parseInt(storedId, 10));
-      fetchDashboardData(parseInt(storedId, 10));
+      const parsedId = parseInt(storedId, 10);
+      setBusinessId(parsedId);
+      fetchDashboardData(parsedId); // Use the parsed ID directly
     }
     if (storedName) setBusinessName(storedName);
   }, []);
@@ -39,6 +40,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
     }
   }, [whatsappStatus]);
 
+  // FIXED: Use the parameter 'bid' instead of ignoring it
   const fetchDashboardData = async (bid: number) => {
     try {
       const empRes = await axios.get(`${API_URL}/api/employees/my-team`, {
@@ -152,7 +154,6 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
               </h1>
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
-              {/* Analytics Toggle Button */}
               <button 
                 onClick={() => setShowAnalytics(!showAnalytics)}
                 style={{
@@ -167,12 +168,6 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                   alignItems: 'center',
                   gap: '8px',
                   transition: 'all 0.2s'
-                }} 
-                onMouseEnter={e => {
-                  if (!showAnalytics) e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
-                }}
-                onMouseLeave={e => {
-                  if (!showAnalytics) e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
                 }}
               >
                 <BarChart3 size={16} /> 
@@ -189,10 +184,8 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px',
-                transition: 'all 0.2s'
-              }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-                 onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}>
+                gap: '8px'
+              }}>
                 <Settings size={16} /> Settings
               </button>
               
@@ -207,14 +200,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px',
-                transition: 'all 0.2s'
-              }} onMouseEnter={e => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 8px 32px rgba(226, 114, 91, 0.3)';
-              }} onMouseLeave={e => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = 'none';
+                gap: '8px'
               }}>
                 <Plus size={16} /> Hire Employee
               </button>
@@ -225,7 +211,6 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
           </p>
         </div>
 
-        {/* CONDITIONAL RENDER: Analytics View vs Dashboard View */}
         {showAnalytics && businessId ? (
           <DashboardWidget businessId={businessId} token={token} />
         ) : (
@@ -243,52 +228,37 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                 border: '1px solid rgba(226,114,91,0.2)',
                 borderRadius: '20px',
                 padding: '24px',
-                position: 'relative',
-                overflow: 'hidden',
-                transition: 'all 0.3s',
                 cursor: 'pointer'
-              }} onClick={() => navigate('/team')} onMouseEnter={e => {
-                e.currentTarget.style.transform = 'translateY(-4px)';
-                e.currentTarget.style.boxShadow = '0 20px 40px rgba(226, 114, 91, 0.2)';
-              }} onMouseLeave={e => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = 'none';
-              }}>
-                <div style={{ position: 'relative', zIndex: 1 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-                    <div style={{
-                      width: '48px', height: '48px',
-                      background: 'rgba(226,114,91,0.2)',
-                      borderRadius: '12px',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      color: '#E2725B'
+              }} onClick={() => navigate('/team')}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                  <div style={{
+                    width: '48px', height: '48px',
+                    background: 'rgba(226,114,91,0.2)',
+                    borderRadius: '12px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: '#E2725B'
+                  }}>
+                    <Users size={24} />
+                  </div>
+                  {activeEmployees.length > 0 && (
+                    <span style={{
+                      padding: '6px 12px',
+                      background: 'rgba(74,222,128,0.1)',
+                      color: '#4ADE80',
+                      borderRadius: '20px',
+                      fontSize: '12px',
+                      fontWeight: 500
                     }}>
-                      <Users size={24} />
-                    </div>
-                    {activeEmployees.length > 0 && (
-                      <span style={{
-                        padding: '6px 12px',
-                        background: 'rgba(74,222,128,0.1)',
-                        color: '#4ADE80',
-                        borderRadius: '20px',
-                        fontSize: '12px',
-                        fontWeight: 500,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px'
-                      }}>
-                        <span style={{ width: '6px', height: '6px', background: '#4ADE80', borderRadius: '50%', animation: 'pulse 2s infinite' }} />
-                        All Active
-                      </span>
-                    )}
-                  </div>
-                  <div style={{ fontSize: '14px', color: '#888', marginBottom: '8px' }}>AI Employees</div>
-                  <div style={{ fontSize: '36px', fontWeight: 700, color: '#fff', marginBottom: '8px' }}>
-                    {activeEmployees.length}
-                  </div>
-                  <div style={{ fontSize: '13px', color: activeEmployees.length > 0 ? '#4ADE80' : '#E2725B' }}>
-                    {activeEmployees.length > 0 ? '✓ Team operational' : '⚠ Hire your first employee'}
-                  </div>
+                      All Active
+                    </span>
+                  )}
+                </div>
+                <div style={{ fontSize: '14px', color: '#888', marginBottom: '8px' }}>AI Employees</div>
+                <div style={{ fontSize: '36px', fontWeight: 700, color: '#fff', marginBottom: '8px' }}>
+                  {activeEmployees.length}
+                </div>
+                <div style={{ fontSize: '13px', color: activeEmployees.length > 0 ? '#4ADE80' : '#E2725B' }}>
+                  {activeEmployees.length > 0 ? '✓ Team operational' : '⚠ Hire your first employee'}
                 </div>
               </div>
 
@@ -297,14 +267,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                 background: 'rgba(26, 26, 36, 0.5)',
                 border: '1px solid rgba(255,255,255,0.08)',
                 borderRadius: '20px',
-                padding: '24px',
-                transition: 'all 0.3s'
-              }} onMouseEnter={e => {
-                e.currentTarget.style.transform = 'translateY(-4px)';
-                e.currentTarget.style.borderColor = 'rgba(74, 144, 255, 0.3)';
-              }} onMouseLeave={e => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
+                padding: '24px'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                   <div style={{
@@ -334,14 +297,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                 background: 'rgba(26, 26, 36, 0.5)',
                 border: '1px solid rgba(255,255,255,0.08)',
                 borderRadius: '20px',
-                padding: '24px',
-                transition: 'all 0.3s'
-              }} onMouseEnter={e => {
-                e.currentTarget.style.transform = 'translateY(-4px)';
-                e.currentTarget.style.borderColor = 'rgba(155, 89, 182, 0.3)';
-              }} onMouseLeave={e => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
+                padding: '24px'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                   <div style={{
@@ -368,14 +324,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                 background: 'rgba(26, 26, 36, 0.5)',
                 border: '1px solid rgba(255,255,255,0.08)',
                 borderRadius: '20px',
-                padding: '24px',
-                transition: 'all 0.3s'
-              }} onMouseEnter={e => {
-                e.currentTarget.style.transform = 'translateY(-4px)';
-                e.currentTarget.style.borderColor = 'rgba(243, 156, 18, 0.3)';
-              }} onMouseLeave={e => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
+                padding: '24px'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                   <div style={{
@@ -399,17 +348,14 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '24px' }}>
-              
-              {/* Main Content Area */}
+              {/* WhatsApp Connection & Recent Activity */}
               <div>
-                {/* WhatsApp Connection */}
                 <div style={{
                   background: 'rgba(26, 26, 36, 0.5)',
                   border: `1px solid ${whatsappStatus === 'connected' ? 'rgba(74,222,128,0.3)' : 'rgba(255,255,255,0.08)'}`,
                   borderRadius: '20px',
                   padding: '28px',
-                  marginBottom: '24px',
-                  transition: 'all 0.3s'
+                  marginBottom: '24px'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
                     <div style={{
@@ -456,19 +402,10 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                         fontWeight: 600,
                         fontSize: '15px',
                         cursor: 'pointer',
-                        transition: 'all 0.2s',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: '8px'
-                      }}
-                      onMouseEnter={e => {
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 12px 40px rgba(226, 114, 91, 0.3)';
-                      }}
-                      onMouseLeave={e => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = 'none';
                       }}
                     >
                       Connect WhatsApp <ArrowRight size={18} />
@@ -495,8 +432,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                             backgroundColor: '#fff', 
                             padding: '20px', 
                             borderRadius: '16px', 
-                            marginBottom: '20px',
-                            boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+                            marginBottom: '20px'
                           }}>
                             <img src={qrCode} alt="WhatsApp QR" style={{ width: '220px', height: '220px' }} />
                           </div>
@@ -521,14 +457,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                         borderRadius: '8px',
                         color: '#888',
                         fontSize: '13px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s'
-                      }} onMouseEnter={e => {
-                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.3)';
-                        e.currentTarget.style.color = '#fff';
-                      }} onMouseLeave={e => {
-                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
-                        e.currentTarget.style.color = '#888';
+                        cursor: 'pointer'
                       }}>
                         Manage
                       </button>
@@ -554,18 +483,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                         gap: '16px',
                         padding: '16px',
                         background: 'rgba(255,255,255,0.03)',
-                        borderRadius: '12px',
-                        transition: 'all 0.2s',
-                        cursor: 'pointer',
-                        border: '1px solid transparent'
-                      }} onMouseEnter={e => {
-                        e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
-                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.05)';
-                        e.currentTarget.style.transform = 'translateX(4px)';
-                      }} onMouseLeave={e => {
-                        e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
-                        e.currentTarget.style.borderColor = 'transparent';
-                        e.currentTarget.style.transform = 'translateX(0)';
+                        borderRadius: '12px'
                       }}>
                         <div style={{
                           width: '40px', height: '40px',
@@ -622,18 +540,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                           display: 'flex',
                           alignItems: 'center',
                           gap: '12px',
-                          transition: 'all 0.2s',
                           width: '100%'
-                        }}
-                        onMouseEnter={e => {
-                          e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
-                          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
-                          e.currentTarget.style.transform = 'translateX(4px)';
-                        }}
-                        onMouseLeave={e => {
-                          e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
-                          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)';
-                          e.currentTarget.style.transform = 'translateX(0)';
                         }}
                       >
                         <div style={{ color: '#E2725B' }}>{item.icon}</div>
@@ -667,15 +574,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                           padding: '14px',
                           background: 'rgba(74,222,128,0.05)',
                           border: '1px solid rgba(74,222,128,0.1)',
-                          borderRadius: '12px',
-                          transition: 'all 0.2s',
-                          cursor: 'pointer'
-                        }} onMouseEnter={e => {
-                          e.currentTarget.style.background = 'rgba(74,222,128,0.1)';
-                          e.currentTarget.style.transform = 'translateX(4px)';
-                        }} onMouseLeave={e => {
-                          e.currentTarget.style.background = 'rgba(74,222,128,0.05)';
-                          e.currentTarget.style.transform = 'translateX(0)';
+                          borderRadius: '12px'
                         }}>
                           <div style={{
                             width: '44px', height: '44px',
@@ -689,7 +588,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                           <div style={{ flex: 1 }}>
                             <div style={{ color: '#fff', fontWeight: 500, fontSize: '14px' }}>{emp.display_name}</div>
                             <div style={{ color: '#4ADE80', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              <span style={{ width: '6px', height: '6px', background: '#4ADE80', borderRadius: '50%', animation: 'pulse 2s infinite' }} />
+                              <span style={{ width: '6px', height: '6px', background: '#4ADE80', borderRadius: '50%' }} />
                               Online
                             </div>
                           </div>
@@ -722,14 +621,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                       color: '#000',
                       fontWeight: 600,
                       fontSize: '14px',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s'
-                    }} onMouseEnter={e => {
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                      e.currentTarget.style.boxShadow = '0 8px 32px rgba(226, 114, 91, 0.3)';
-                    }} onMouseLeave={e => {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = 'none';
+                      cursor: 'pointer'
                     }}>
                       Hire Now
                     </button>
@@ -745,10 +637,6 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
-        }
-        @keyframes pulse {
-          0%, 100% { opacity: 1; transform: scale(1); }
-          50% { opacity: 0.5; transform: scale(1.2); }
         }
       `}</style>
     </div>
