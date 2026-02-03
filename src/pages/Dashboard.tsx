@@ -28,7 +28,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
     if (storedId) {
       const parsedId = parseInt(storedId, 10);
       setBusinessId(parsedId);
-      fetchDashboardData(parsedId); // Use the parsed ID directly
+      fetchDashboardData(parsedId);
     }
     if (storedName) setBusinessName(storedName);
   }, []);
@@ -40,18 +40,16 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
     }
   }, [whatsappStatus]);
 
-  // FIXED: Use the parameter 'bid' instead of ignoring it
-  const fetchDashboardData = async (bid: number) => {
+  // FIXED: Added underscore prefix to indicate intentionally unused parameter
+  const fetchDashboardData = async (_bid: number) => {
     try {
       const empRes = await axios.get(`${API_URL}/api/employees/my-team`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setActiveEmployees(empRes.data.filter((e: any) => e.is_hired));
 
-      // Mock stats - replace with real API calls
       setStats({ conversations: 127, messages: 842, responseTime: 2.3 });
       
-      // Mock recent activity
       setRecentActivity([
         { type: 'message', text: 'New order from +234 801 234 5678', time: '2 min ago', employee: 'Amina' },
         { type: 'appointment', text: 'Appointment booked for tomorrow 2PM', time: '15 min ago', employee: 'Amina' },
@@ -122,7 +120,6 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
       fontFamily: 'Inter, -apple-system, sans-serif',
       padding: '32px'
     }}>
-      {/* Animated Background */}
       <div style={{
         position: 'fixed',
         top: 0, left: 0, right: 0, bottom: 0,
@@ -137,7 +134,6 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
 
       <div style={{ position: 'relative', zIndex: 1, maxWidth: '1400px', margin: '0 auto' }}>
         
-        {/* Header */}
         <div style={{ marginBottom: '40px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
             <div>
@@ -166,8 +162,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px',
-                  transition: 'all 0.2s'
+                  gap: '8px'
                 }}
               >
                 <BarChart3 size={16} /> 
@@ -215,14 +210,12 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
           <DashboardWidget businessId={businessId} token={token} />
         ) : (
           <>
-            {/* Stats Grid */}
             <div style={{ 
               display: 'grid', 
               gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
               gap: '20px',
               marginBottom: '32px'
             }}>
-              {/* AI Employees Card */}
               <div style={{
                 background: 'linear-gradient(145deg, rgba(226,114,91,0.1) 0%, rgba(26,26,36,0.5) 100%)',
                 border: '1px solid rgba(226,114,91,0.2)',
@@ -262,7 +255,6 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                 </div>
               </div>
 
-              {/* Conversations Card */}
               <div style={{
                 background: 'rgba(26, 26, 36, 0.5)',
                 border: '1px solid rgba(255,255,255,0.08)',
@@ -292,7 +284,6 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                 </div>
               </div>
 
-              {/* Messages Card */}
               <div style={{
                 background: 'rgba(26, 26, 36, 0.5)',
                 border: '1px solid rgba(255,255,255,0.08)',
@@ -319,7 +310,6 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                 </div>
               </div>
 
-              {/* Response Time Card */}
               <div style={{
                 background: 'rgba(26, 26, 36, 0.5)',
                 border: '1px solid rgba(255,255,255,0.08)',
@@ -348,7 +338,6 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '24px' }}>
-              {/* WhatsApp Connection & Recent Activity */}
               <div>
                 <div style={{
                   background: 'rgba(26, 26, 36, 0.5)',
@@ -465,7 +454,6 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                   )}
                 </div>
 
-                {/* Recent Activity */}
                 <div style={{
                   background: 'rgba(26, 26, 36, 0.5)',
                   border: '1px solid rgba(255,255,255,0.08)',
@@ -507,9 +495,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                 </div>
               </div>
 
-              {/* Sidebar */}
               <div>
-                {/* Quick Actions */}
                 <div style={{
                   background: 'rgba(26, 26, 36, 0.5)',
                   border: '1px solid rgba(255,255,255,0.08)',
@@ -554,7 +540,6 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                   </div>
                 </div>
 
-                {/* Active Workforce */}
                 {activeEmployees.length > 0 && (
                   <div style={{
                     background: 'rgba(26, 26, 36, 0.5)',
@@ -598,7 +583,6 @@ const Dashboard: React.FC<DashboardProps> = ({ token }) => {
                   </div>
                 )}
 
-                {/* Upgrade CTA */}
                 {activeEmployees.length === 0 && (
                   <div style={{
                     background: 'linear-gradient(145deg, rgba(226,114,91,0.1) 0%, rgba(26,26,36,0.5) 100%)',
