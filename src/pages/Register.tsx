@@ -51,20 +51,25 @@ const Register: React.FC = () => {
 
     setLoading(true);
 
+    // DEBUG: Log what we're sending
+    const requestData = {
+      business_name: formData.businessName,
+      country: formData.country,
+      name: formData.fullName, // ✅ FIXED: Changed from full_name to name
+      email: formData.email,
+      phone: formData.phone,
+      password: formData.password,
+    };
+    
+    console.log('Sending registration data:', requestData);
+
     try {
       const response = await fetch(`${API_URL}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          business_name: formData.businessName,
-          country: formData.country,
-          full_name: formData.fullName,
-          email: formData.email,
-          phone: formData.phone,
-          password: formData.password,
-        }),
+        body: JSON.stringify(requestData),
       });
 
       // Check if response is JSON
@@ -242,7 +247,7 @@ const Register: React.FC = () => {
                   outline: 'none',
                   cursor: 'pointer',
                   appearance: 'none',
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg ' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
                   backgroundRepeat: 'no-repeat',
                   backgroundPosition: 'right 12px center',
                   backgroundSize: '20px',
