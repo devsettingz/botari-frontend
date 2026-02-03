@@ -1,292 +1,517 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import '../components/Auth.css';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowRight, Eye, EyeOff, Loader2 } from 'lucide-react';
 
-// All countries - African markets first
-const COUNTRIES = [
-  { code: 'NG', name: 'Nigeria' },
-  { code: 'KE', name: 'Kenya' },
-  { code: 'GH', name: 'Ghana' },
-  { code: 'ZA', name: 'South Africa' },
-  { code: 'EG', name: 'Egypt' },
-  { code: 'TZ', name: 'Tanzania' },
-  { code: 'UG', name: 'Uganda' },
-  { code: 'RW', name: 'Rwanda' },
-  { code: 'ET', name: 'Ethiopia' },
-  { code: 'SN', name: 'Senegal' },
-  { code: 'CI', name: "Côte d'Ivoire" },
-  { code: 'CM', name: 'Cameroon' },
-  { code: 'ZW', name: 'Zimbabwe' },
-  { code: 'ZM', name: 'Zambia' },
-  { code: 'BW', name: 'Botswana' },
-  { code: 'NA', name: 'Namibia' },
-  { code: 'MZ', name: 'Mozambique' },
-  { code: 'MW', name: 'Malawi' },
-  { code: 'MA', name: 'Morocco' },
-  { code: 'TN', name: 'Tunisia' },
-  { code: 'DZ', name: 'Algeria' },
-  { code: 'LY', name: 'Libya' },
-  { code: 'SD', name: 'Sudan' },
-  { code: 'SS', name: 'South Sudan' },
-  { code: 'AO', name: 'Angola' },
-  { code: 'CD', name: 'DR Congo' },
-  { code: 'CG', name: 'Congo' },
-  { code: 'GA', name: 'Gabon' },
-  { code: 'GQ', name: 'Equatorial Guinea' },
-  { code: 'TD', name: 'Chad' },
-  { code: 'NE', name: 'Niger' },
-  { code: 'ML', name: 'Mali' },
-  { code: 'BF', name: 'Burkina Faso' },
-  { code: 'GN', name: 'Guinea' },
-  { code: 'SL', name: 'Sierra Leone' },
-  { code: 'LR', name: 'Liberia' },
-  { code: 'GM', name: 'Gambia' },
-  { code: 'GW', name: 'Guinea-Bissau' },
-  { code: 'BJ', name: 'Benin' },
-  { code: 'TG', name: 'Togo' },
-  { code: 'MR', name: 'Mauritania' },
-  { code: 'ER', name: 'Eritrea' },
-  { code: 'DJ', name: 'Djibouti' },
-  { code: 'SO', name: 'Somalia' },
-  { code: 'MG', name: 'Madagascar' },
-  { code: 'MU', name: 'Mauritius' },
-  { code: 'SC', name: 'Seychelles' },
-  { code: 'KM', name: 'Comoros' },
-  { code: 'CV', name: 'Cape Verde' },
-  { code: 'ST', name: 'São Tomé and Príncipe' },
-  { code: 'US', name: 'United States' },
-  { code: 'GB', name: 'United Kingdom' },
-  { code: 'CA', name: 'Canada' },
-  { code: 'AU', name: 'Australia' },
-  { code: 'DE', name: 'Germany' },
-  { code: 'FR', name: 'France' },
-  { code: 'NL', name: 'Netherlands' },
-  { code: 'IT', name: 'Italy' },
-  { code: 'ES', name: 'Spain' },
-  { code: 'PT', name: 'Portugal' },
-  { code: 'BE', name: 'Belgium' },
-  { code: 'CH', name: 'Switzerland' },
-  { code: 'AT', name: 'Austria' },
-  { code: 'SE', name: 'Sweden' },
-  { code: 'NO', name: 'Norway' },
-  { code: 'DK', name: 'Denmark' },
-  { code: 'FI', name: 'Finland' },
-  { code: 'IE', name: 'Ireland' },
-  { code: 'IN', name: 'India' },
-  { code: 'CN', name: 'China' },
-  { code: 'JP', name: 'Japan' },
-  { code: 'BR', name: 'Brazil' },
-  { code: 'MX', name: 'Mexico' },
-  { code: 'AE', name: 'UAE' },
-  { code: 'SA', name: 'Saudi Arabia' },
-  { code: 'TR', name: 'Turkey' },
-  { code: 'IL', name: 'Israel' },
-  { code: 'RU', name: 'Russia' },
-  { code: 'KR', name: 'South Korea' },
-  { code: 'SG', name: 'Singapore' },
-  { code: 'MY', name: 'Malaysia' },
-  { code: 'ID', name: 'Indonesia' },
-  { code: 'TH', name: 'Thailand' },
-  { code: 'VN', name: 'Vietnam' },
-  { code: 'PH', name: 'Philippines' },
-  { code: 'PK', name: 'Pakistan' },
-  { code: 'BD', name: 'Bangladesh' },
-  { code: 'LK', name: 'Sri Lanka' },
-  { code: 'NP', name: 'Nepal' },
-];
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 const Register: React.FC = () => {
-  const [businessName, setBusinessName] = useState('');
-  const [country, setCountry] = useState('NG'); // Default Nigeria
-  const [ownerName, setOwnerName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [formData, setFormData] = useState({
+    businessName: '',
+    country: 'Ghana',
+    fullName: '',
+    email: '',
+    phone: '',
+    password: '',
+    confirmPassword: '',
+    agreeTerms: false,
+  });
   const [showPassword, setShowPassword] = useState(false);
-  const [agreeTerms, setAgreeTerms] = useState(false);
-  const [error, setError] = useState('');
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
+
+  const countries = [
+    'Ghana', 'Nigeria', 'Kenya', 'South Africa', 'Egypt', 'Morocco', 
+    'Tunisia', 'Algeria', 'Ethiopia', 'Uganda', 'Tanzania', 'Rwanda',
+    'Senegal', 'Ivory Coast', 'Cameroon', 'Zambia', 'Zimbabwe', 'Botswana'
+  ];
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    if (password !== confirmPassword) {
+    if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return;
     }
 
-    if (!agreeTerms) {
-      setError('You must agree to the privacy policy');
+    if (!formData.agreeTerms) {
+      setError('Please agree to the terms and conditions');
       return;
     }
 
     setLoading(true);
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE}/auth/register`, {
+      const response = await fetch(`${API_URL}/api/auth/register`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
-          business_name: businessName,
-          country,
-          name: ownerName,
-          email,
-          password,
-          phone,
+          business_name: formData.businessName,
+          country: formData.country,
+          full_name: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          password: formData.password,
         }),
       });
 
-      const data = await res.json();
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('Non-JSON response:', text.substring(0, 200));
+        throw new Error('Server error: Please try again later');
+      }
 
-      if (!res.ok) throw new Error(data.error || 'Registration failed');
+      const data = await response.json();
 
-      // Store auth data
-      if (data.token) localStorage.setItem('jwt', data.token);
-      if (data.business_id) localStorage.setItem('business_id', data.business_id);
-      if (data.business_name) localStorage.setItem('business_name', data.business_name);
-      if (data.email) localStorage.setItem('user_email', data.email);
+      if (!response.ok) {
+        throw new Error(data.error || 'Registration failed');
+      }
 
+      // Store token and redirect
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('business_id', data.business_id);
+      localStorage.setItem('business_name', data.business_name);
+      
       navigate('/team');
     } catch (err: any) {
-      setError(err.message || 'Registration failed');
+      setError(err.message || 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="auth-container">
-      <h2 className="auth-title">Create Your Account</h2>
-      <p style={{ textAlign: 'center', color: '#666', marginBottom: '20px' }}>
-        Hire AI employees for your business
-      </p>
-      
-      <form onSubmit={handleSubmit} className="auth-form">
-        <label>Business Name *</label>
-        <input
-          type="text"
-          placeholder="e.g., Mama's Kitchen Lagos"
-          value={businessName}
-          onChange={(e) => setBusinessName(e.target.value)}
-          required
-        />
+    <div style={{
+      minHeight: '100vh',
+      backgroundColor: '#0A0A0F',
+      color: '#FFFFFF',
+      fontFamily: 'Inter, -apple-system, sans-serif',
+      display: 'flex',
+      flexDirection: 'column'
+    }}>
+      {/* Animated Background */}
+      <div style={{
+        position: 'fixed',
+        top: 0, left: 0, right: 0, bottom: 0,
+        background: `
+          radial-gradient(ellipse 80% 50% at 20% 40%, rgba(226, 114, 91, 0.15) 0%, transparent 50%),
+          radial-gradient(ellipse 60% 40% at 80% 60%, rgba(74, 144, 255, 0.08) 0%, transparent 50%),
+          #0A0A0F
+        `,
+        zIndex: 0,
+        pointerEvents: 'none'
+      }} />
 
-        <label>Country *</label>
-        <select
-          value={country}
-          onChange={(e) => setCountry(e.target.value)}
-          required
-          style={{
-            width: '100%',
-            padding: '10px',
-            marginBottom: '15px',
-            borderRadius: '4px',
-            border: '1px solid #333',
-            backgroundColor: '#1a1a1a',
-            color: '#fff',
-            fontSize: '14px'
-          }}
-        >
-          <optgroup label="🇳🇬 Major African Markets">
-            {COUNTRIES.filter(c => ['NG', 'KE', 'GH', 'ZA', 'EG', 'TZ', 'UG', 'RW'].includes(c.code)).map(c => (
-              <option key={c.code} value={c.code}>{c.name}</option>
-            ))}
-          </optgroup>
-          <optgroup label="🌍 All African Countries">
-            {COUNTRIES.filter(c => 
-              ['NG','KE','GH','ZA','EG','TZ','UG','RW','ET','SN','CI','CM','ZW','ZM','BW','NA','MZ','MW','MA','TN','DZ','LY','SD','SS','AO','CD','CG','GA','GQ','TD','NE','ML','BF','GN','SL','LR','GM','GW','BJ','TG','MR','ER','DJ','SO','MG','MU','SC','KM','CV','ST'].includes(c.code) && 
-              !['NG', 'KE', 'GH', 'ZA', 'EG', 'TZ', 'UG', 'RW'].includes(c.code)
-            ).map(c => (
-              <option key={c.code} value={c.code}>{c.name}</option>
-            ))}
-          </optgroup>
-          <optgroup label="🌎 International">
-            {COUNTRIES.filter(c => ['US','GB','CA','AU','DE','FR','NL','IT','ES','PT','BE','CH','AT','SE','NO','DK','FI','IE','IN','CN','JP','BR','MX','AE','SA','TR','IL','RU','KR','SG','MY','ID','TH','VN','PH','PK','BD','LK','NP'].includes(c.code)).map(c => (
-              <option key={c.code} value={c.code}>{c.name}</option>
-            ))}
-          </optgroup>
-        </select>
+      {/* Header */}
+      <nav style={{
+        position: 'relative',
+        zIndex: 1,
+        padding: '24px 48px',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        borderBottom: '1px solid rgba(255,255,255,0.05)'
+      }}>
+        <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{
+            width: '40px', height: '40px',
+            background: 'linear-gradient(135deg, #E2725B 0%, #FF8E53 100%)',
+            borderRadius: '12px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '20px'
+          }}>
+            🤖
+          </div>
+          <span style={{ fontSize: '24px', fontWeight: 700, color: '#fff', letterSpacing: '-0.5px' }}>
+            Botari
+          </span>
+        </Link>
+        <Link to="/login" style={{ textDecoration: 'none' }}>
+          <span style={{ color: '#888', fontSize: '14px' }}>Already have an account? </span>
+          <span style={{ color: '#E2725B', fontWeight: 600 }}>Sign in</span>
+        </Link>
+      </nav>
 
-        <label>Your Full Name *</label>
-        <input
-          type="text"
-          placeholder="e.g., John Doe"
-          value={ownerName}
-          onChange={(e) => setOwnerName(e.target.value)}
-          required
-        />
+      {/* Main Content */}
+      <div style={{
+        position: 'relative',
+        zIndex: 1,
+        flex: 1,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '48px 24px'
+      }}>
+        <div style={{
+          width: '100%',
+          maxWidth: '480px',
+          background: 'rgba(26, 26, 36, 0.6)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          borderRadius: '24px',
+          padding: '40px'
+        }}>
+          <h1 style={{
+            fontSize: '32px',
+            fontWeight: 700,
+            marginBottom: '8px',
+            background: 'linear-gradient(135deg, #FFFFFF 0%, #A0A0B0 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent'
+          }}>
+            Create Your Account
+          </h1>
+          <p style={{ color: '#888', marginBottom: '32px', fontSize: '15px' }}>
+            Hire AI employees for your business
+          </p>
 
-        <label>Email Address *</label>
-        <input
-          type="email"
-          placeholder="you@business.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
+          {error && (
+            <div style={{
+              padding: '12px 16px',
+              background: 'rgba(239, 68, 68, 0.1)',
+              border: '1px solid rgba(239, 68, 68, 0.2)',
+              borderRadius: '12px',
+              color: '#EF4444',
+              fontSize: '14px',
+              marginBottom: '24px'
+            }}>
+              {error}
+            </div>
+          )}
 
-        <label>WhatsApp Number *</label>
-        <input
-          type="tel"
-          placeholder="+234 801 234 5678"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          required
-        />
-        <small style={{ color: '#666', display: 'block', marginTop: '-10px', marginBottom: '15px' }}>
-          This will be connected to Amina for customer service
-        </small>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {/* Business Name */}
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px', color: '#fff' }}>
+                Business Name *
+              </label>
+              <input
+                type="text"
+                name="businessName"
+                value={formData.businessName}
+                onChange={handleChange}
+                required
+                style={{
+                  width: '100%',
+                  padding: '14px 16px',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '12px',
+                  color: '#fff',
+                  fontSize: '15px',
+                  outline: 'none',
+                  transition: 'all 0.2s'
+                }}
+                onFocus={(e) => e.target.style.borderColor = 'rgba(226,114,91,0.5)'}
+                onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+              />
+            </div>
 
-        <label>Password *</label>
-        <input
-          type={showPassword ? 'text' : 'password'}
-          placeholder="Create a password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          minLength={6}
-        />
+            {/* Country */}
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px', color: '#fff' }}>
+                Country *
+              </label>
+              <select
+                name="country"
+                value={formData.country}
+                onChange={handleChange}
+                required
+                style={{
+                  width: '100%',
+                  padding: '14px 16px',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '12px',
+                  color: '#fff',
+                  fontSize: '15px',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  appearance: 'none',
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 12px center',
+                  backgroundSize: '20px',
+                  paddingRight: '44px'
+                }}
+              >
+                {countries.map(country => (
+                  <option key={country} value={country} style={{ background: '#1a1a24', color: '#fff' }}>
+                    {country}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-        <label>Confirm Password *</label>
-        <input
-          type={showPassword ? 'text' : 'password'}
-          placeholder="Confirm your password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          required
-        />
+            {/* Full Name */}
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px', color: '#fff' }}>
+                Your Full Name *
+              </label>
+              <input
+                type="text"
+                name="fullName"
+                value={formData.fullName}
+                onChange={handleChange}
+                required
+                style={{
+                  width: '100%',
+                  padding: '14px 16px',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '12px',
+                  color: '#fff',
+                  fontSize: '15px',
+                  outline: 'none',
+                  transition: 'all 0.2s'
+                }}
+                onFocus={(e) => e.target.style.borderColor = 'rgba(226,114,91,0.5)'}
+                onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+              />
+            </div>
 
-        <div className="checkbox-row">
-          <input
-            type="checkbox"
-            checked={showPassword}
-            onChange={() => setShowPassword(!showPassword)}
-          />
-          <label>Show Password</label>
+            {/* Email */}
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px', color: '#fff' }}>
+                Email Address *
+              </label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                style={{
+                  width: '100%',
+                  padding: '14px 16px',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '12px',
+                  color: '#fff',
+                  fontSize: '15px',
+                  outline: 'none',
+                  transition: 'all 0.2s'
+                }}
+                onFocus={(e) => e.target.style.borderColor = 'rgba(226,114,91,0.5)'}
+                onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+              />
+            </div>
+
+            {/* Phone */}
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px', color: '#fff' }}>
+                WhatsApp Number *
+              </label>
+              <input
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                required
+                placeholder="e.g., +233 50 123 4567"
+                style={{
+                  width: '100%',
+                  padding: '14px 16px',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '12px',
+                  color: '#fff',
+                  fontSize: '15px',
+                  outline: 'none',
+                  transition: 'all 0.2s'
+                }}
+                onFocus={(e) => e.target.style.borderColor = 'rgba(226,114,91,0.5)'}
+                onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+              />
+              <p style={{ fontSize: '12px', color: '#666', marginTop: '6px' }}>
+                This will be connected to Amina for customer service
+              </p>
+            </div>
+
+            {/* Password */}
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px', color: '#fff' }}>
+                Password *
+              </label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '14px 16px',
+                    paddingRight: '48px',
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '12px',
+                    color: '#fff',
+                    fontSize: '15px',
+                    outline: 'none',
+                    transition: 'all 0.2s'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(226,114,91,0.5)'}
+                  onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: 'absolute',
+                    right: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    color: '#666',
+                    cursor: 'pointer',
+                    padding: '4px'
+                  }}
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Confirm Password */}
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: 500, marginBottom: '8px', color: '#fff' }}>
+                Confirm Password *
+              </label>
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  required
+                  style={{
+                    width: '100%',
+                    padding: '14px 16px',
+                    paddingRight: '48px',
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '12px',
+                    color: '#fff',
+                    fontSize: '15px',
+                    outline: 'none',
+                    transition: 'all 0.2s'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = 'rgba(226,114,91,0.5)'}
+                  onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  style={{
+                    position: 'absolute',
+                    right: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    color: '#666',
+                    cursor: 'pointer',
+                    padding: '4px'
+                  }}
+                >
+                  {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+            </div>
+
+            {/* Terms */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px' }}>
+              <input
+                type="checkbox"
+                name="agreeTerms"
+                checked={formData.agreeTerms}
+                onChange={handleChange}
+                id="terms"
+                style={{
+                  width: '20px',
+                  height: '20px',
+                  marginTop: '2px',
+                  accentColor: '#E2725B',
+                  cursor: 'pointer'
+                }}
+              />
+              <label htmlFor="terms" style={{ fontSize: '14px', color: '#888', cursor: 'pointer' }}>
+                I agree to the{' '}
+                <Link to="/privacy" style={{ color: '#E2725B', textDecoration: 'none' }}>privacy policy</Link>
+                {' '}and{' '}
+                <Link to="/terms" style={{ color: '#E2725B', textDecoration: 'none' }}>terms</Link>
+              </label>
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                width: '100%',
+                padding: '16px',
+                background: 'linear-gradient(135deg, #E2725B 0%, #FF8E53 100%)',
+                border: 'none',
+                borderRadius: '12px',
+                color: '#000',
+                fontWeight: 600,
+                fontSize: '16px',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                opacity: loading ? 0.7 : 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                transition: 'all 0.2s',
+                marginTop: '8px'
+              }}
+            >
+              {loading ? (
+                <>
+                  <Loader2 size={20} style={{ animation: 'spin 1s linear infinite' }} />
+                  Creating Account...
+                </>
+              ) : (
+                <>
+                  Create Account & Hire Amina
+                  <ArrowRight size={20} />
+                </>
+              )}
+            </button>
+          </form>
+
+          <p style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px', color: '#888' }}>
+            Already have an account?{' '}
+            <Link to="/login" style={{ color: '#E2725B', textDecoration: 'none', fontWeight: 600 }}>
+              Sign in
+            </Link>
+          </p>
         </div>
-
-        <div className="checkbox-row">
-          <input
-            type="checkbox"
-            checked={agreeTerms}
-            onChange={() => setAgreeTerms(!agreeTerms)}
-          />
-          <label>I agree to the privacy policy and terms</label>
-        </div>
-
-        {error && <p className="auth-error" style={{ color: '#E2725B', marginBottom: '10px' }}>{error}</p>}
-
-        <button type="submit" disabled={loading} className="auth-button">
-          {loading ? 'Creating Account...' : 'Create Account & Hire Amina'}
-        </button>
-      </form>
-
-      <div className="auth-footer">
-        Already have an account? <Link to="/login">Sign in</Link>
       </div>
+
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };
