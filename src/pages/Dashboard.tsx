@@ -11,7 +11,8 @@ import {
   Plus, 
   Activity, 
   BarChart3,
-  LogOut
+  LogOut,
+  User
 } from 'lucide-react';
 import DashboardWidget from '../components/DashboardWidget';
 
@@ -35,6 +36,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token: propToken }) => {
   const [showAnalytics, setShowAnalytics] = useState(false);
   const [loading, setLoading] = useState(true);
   const [whatsappError, setWhatsappError] = useState('');
+  const [connectingEmployeeId, setConnectingEmployeeId] = useState<number | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -73,22 +75,30 @@ const Dashboard: React.FC<DashboardProps> = ({ token: propToken }) => {
     }
   }, [whatsappStatus]);
 
-  // FIXED: Added underscore prefix to fix "declared but never read" warning
   const fetchDashboardData = async (_bid: number, tokenForAuth: string) => {
     try {
       setLoading(true);
       const empRes = await axios.get(`${API_URL}/api/employees/my-team`, {
         headers: { Authorization: `Bearer ${tokenForAuth}` }
       });
-      setActiveEmployees(empRes.data.filter((e: any) => e.is_hired));
+      
+      // Filter only hired employees
+      const hiredEmployees = empRes.data.filter((e: any) => e.is_hired || e.status === 'active');
+      setActiveEmployees(hiredEmployees);
+      
+      console.log('Fetched team:', hiredEmployees);
+
+      // If we have employees, generate some activity based on them
+      if (hiredEmployees.length > 0) {
+        setRecentActivity([
+          { type: 'employee', text: `${hiredEmployees[0].display_name} is ready for setup`, time: 'Just now', employee: hiredEmployees[0].display_name },
+          { type: 'message', text: 'New order from +234 801 234 5678', time: '2 min ago', employee: hiredEmployees[0].display_name || 'Amina' },
+          { type: 'appointment', text: 'Appointment booked for tomorrow 2PM', time: '15 min ago', employee: hiredEmployees[0].display_name || 'Amina' },
+        ]);
+      }
 
       setStats({ conversations: 127, messages: 842, responseTime: 2.3 });
       
-      setRecentActivity([
-        { type: 'message', text: 'New order from +234 801 234 5678', time: '2 min ago', employee: 'Amina' },
-        { type: 'appointment', text: 'Appointment booked for tomorrow 2PM', time: '15 min ago', employee: 'Amina' },
-        { type: 'employee', text: 'Stan sent 3 cold emails', time: '1 hour ago', employee: 'Stan' },
-      ]);
     } catch (err) {
       console.error('Dashboard load error:', err);
     } finally {
@@ -96,7 +106,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token: propToken }) => {
     }
   };
 
-  const connectWhatsApp = async () => {
+  const connectWhatsApp = async (employeeId?: number) => {
     const currentToken = localStorage.getItem('jwt') || localStorage.getItem('token');
     if (!currentToken) {
       alert('Please log in again');
@@ -105,10 +115,13 @@ const Dashboard: React.FC<DashboardProps> = ({ token: propToken }) => {
     }
     
     setWhatsappStatus('connecting');
+    if (employeeId) setConnectingEmployeeId(employeeId);
     setWhatsappError('');
     
     try {
-      const res = await axios.post(`${API_URL}/api/whatsapp/connect`, {}, {
+      const res = await axios.post(`${API_URL}/api/whatsapp/connect`, {
+        employee_id: employeeId // Send employee ID if connecting specific employee
+      }, {
         headers: { Authorization: `Bearer ${currentToken}` }
       });
       if (res.data.qrCode) {
@@ -120,6 +133,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token: propToken }) => {
       setWhatsappError(errorMsg);
       alert('Failed to start WhatsApp connection: ' + errorMsg);
       setWhatsappStatus('disconnected');
+      setConnectingEmployeeId(null);
     }
   };
 
@@ -134,6 +148,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token: propToken }) => {
       if (res.data.connected) {
         setWhatsappStatus('connected');
         setQrCode(null);
+        setConnectingEmployeeId(null);
       }
     } catch (e) {}
   };
@@ -254,7 +269,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token: propToken }) => {
                 {showAnalytics ? 'Hide Analytics' : 'View Analytics'}
               </button>
 
-              {/* Settings Button - NOW WORKING */}
+              {/* Settings Button */}
               <button 
                 onClick={handleSettings}
                 style={{
@@ -274,7 +289,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token: propToken }) => {
                 <Settings size={16} /> Settings
               </button>
 
-              {/* Logout Button - NEW */}
+              {/* Logout Button */}
               <button 
                 onClick={handleLogout}
                 style={{
@@ -308,12 +323,13 @@ const Dashboard: React.FC<DashboardProps> = ({ token: propToken }) => {
                 gap: '8px',
                 transition: 'all 0.2s'
               }}>
-                <Plus size={16} /> Hire Employee
+                <Plus size={16} /> {activeEmployees.length > 0 ? 'Hire More' : 'Hire Employee'}
               </button>
             </div>
           </div>
           <p style={{ color: '#666', fontSize: '16px' }}>
-            {showAnalytics ? 'Deep dive into your performance metrics.' : "Here's your AI workforce performance today."}
+            {showAnalytics ? 'Deep dive into your performance metrics.' : 
+             activeEmployees.length > 0 ? `You have ${activeEmployees.length} AI team member${activeEmployees.length > 1 ? 's' : ''} ready.` : "Build your AI workforce to automate your business."}
           </p>
         </div>
 
@@ -365,7 +381,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token: propToken }) => {
                         fontSize: '12px',
                         fontWeight: 500
                       }}>
-                        All Active
+                        Hired
                       </span>
                     )}
                   </div>
@@ -382,7 +398,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token: propToken }) => {
                     fontSize: '13px', 
                     color: activeEmployees.length > 0 ? '#4ADE80' : '#E2725B' 
                   }}>
-                    {activeEmployees.length > 0 ? '✓ Team operational' : '⚠ Hire your first employee'}
+                    {activeEmployees.length > 0 ? '✓ Team hired and ready' : '⚠ Hire your first employee'}
                   </div>
                 </div>
               </div>
@@ -517,174 +533,302 @@ const Dashboard: React.FC<DashboardProps> = ({ token: propToken }) => {
               </div>
             </div>
 
+            {/* YOUR AI TEAM SECTION - Shows hired employees */}
+            {activeEmployees.length > 0 && (
+              <div style={{
+                background: 'rgba(26, 26, 36, 0.5)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: '20px',
+                padding: '28px',
+                marginBottom: '32px'
+              }}>
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center', 
+                  marginBottom: '24px' 
+                }}>
+                  <h3 style={{ margin: 0, color: '#fff', fontSize: '20px', fontWeight: 600 }}>
+                    Your AI Team
+                  </h3>
+                  <span style={{ color: '#4ADE80', fontSize: '14px' }}>
+                    {activeEmployees.length} Active
+                  </span>
+                </div>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px' }}>
+                  {activeEmployees.map((emp) => (
+                    <div key={emp.id} style={{
+                      background: 'rgba(255,255,255,0.03)',
+                      border: '1px solid rgba(255,255,255,0.06)',
+                      borderRadius: '16px',
+                      padding: '20px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '16px',
+                      transition: 'all 0.2s',
+                    }}>
+                      <div style={{
+                        width: '56px', height: '56px',
+                        background: emp.avatar_url ? 'transparent' : 'rgba(226,114,91,0.2)',
+                        borderRadius: '50%',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        color: '#E2725B',
+                        fontSize: '24px',
+                        overflow: 'hidden'
+                      }}>
+                        {emp.avatar_url ? (
+                          <img src={emp.avatar_url} alt={emp.display_name} style={{width: '100%', height: '100%', objectFit: 'cover'}} />
+                        ) : (
+                          <User size={28} />
+                        )}
+                      </div>
+                      
+                      <div style={{ flex: 1 }}>
+                        <div style={{ color: '#fff', fontWeight: 600, fontSize: '16px', marginBottom: '4px' }}>
+                          {emp.display_name}
+                        </div>
+                        <div style={{ color: '#888', fontSize: '13px', marginBottom: '6px' }}>
+                          {emp.employee_role || 'AI Assistant'}
+                        </div>
+                        <div style={{ 
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          fontSize: '12px',
+                          color: emp.is_active ? '#4ADE80' : '#F39C12',
+                          background: emp.is_active ? 'rgba(74,222,128,0.1)' : 'rgba(243,156,18,0.1)',
+                          padding: '4px 8px',
+                          borderRadius: '6px'
+                        }}>
+                          <div style={{
+                            width: '6px', height: '6px',
+                            borderRadius: '50%',
+                            background: emp.is_active ? '#4ADE80' : '#F39C12'
+                          }} />
+                          {emp.is_active ? 'Active' : 'Setup Required'}
+                        </div>
+                      </div>
+
+                      {/* Connect/WhatsApp Button per employee */}
+                      {emp.assigned_channel === 'whatsapp' && (
+                        <button
+                          onClick={() => connectWhatsApp(emp.id)}
+                          disabled={whatsappStatus === 'connecting' && connectingEmployeeId === emp.id}
+                          style={{
+                            padding: '10px 16px',
+                            background: whatsappStatus === 'connected' ? 'rgba(74,222,128,0.1)' : 'rgba(226,114,91,0.2)',
+                            border: `1px solid ${whatsappStatus === 'connected' ? 'rgba(74,222,128,0.3)' : 'rgba(226,114,91,0.3)'}`,
+                            borderRadius: '8px',
+                            color: whatsappStatus === 'connected' ? '#4ADE80' : '#E2725B',
+                            fontSize: '13px',
+                            fontWeight: 500,
+                            cursor: whatsappStatus === 'connecting' && connectingEmployeeId === emp.id ? 'wait' : 'pointer',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          {whatsappStatus === 'connecting' && connectingEmployeeId === emp.id ? (
+                            'Connecting...'
+                          ) : whatsappStatus === 'connected' ? (
+                            'Connected ✅'
+                          ) : (
+                            'Connect WhatsApp'
+                          )}
+                        </button>
+                      )}
+                      
+                      {emp.assigned_channel !== 'whatsapp' && (
+                        <button
+                          onClick={() => navigate(`/employee/${emp.id}/settings`)}
+                          style={{
+                            padding: '10px 16px',
+                            background: 'rgba(255,255,255,0.05)',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            borderRadius: '8px',
+                            color: '#fff',
+                            fontSize: '13px',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          Configure
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '24px' }}>
               
               {/* Main Content Area */}
               <div>
-                {/* WhatsApp Connection */}
-                <div style={{
-                  background: 'rgba(26, 26, 36, 0.5)',
-                  border: `1px solid ${whatsappStatus === 'connected' ? 'rgba(74,222,128,0.3)' : 'rgba(255,255,255,0.08)'}`,
-                  borderRadius: '20px',
-                  padding: '28px',
-                  marginBottom: '24px',
-                  transition: 'all 0.3s'
-                }}>
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: '16px', 
-                    marginBottom: '20px' 
+                {/* WhatsApp Connection - Only show if no employees or global connection needed */}
+                {activeEmployees.length === 0 && (
+                  <div style={{
+                    background: 'rgba(26, 26, 36, 0.5)',
+                    border: `1px solid ${whatsappStatus === 'connected' ? 'rgba(74,222,128,0.3)' : 'rgba(255,255,255,0.08)'}`,
+                    borderRadius: '20px',
+                    padding: '28px',
+                    marginBottom: '24px',
+                    transition: 'all 0.3s'
                   }}>
-                    <div style={{
-                      width: '56px', height: '56px',
-                      background: whatsappStatus === 'connected' ? 'rgba(74,222,128,0.1)' : 'rgba(226,114,91,0.1)',
-                      borderRadius: '16px',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '28px'
-                    }}>
-                      {whatsappStatus === 'connected' ? '✅' : '💬'}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <h3 style={{ 
-                        margin: '0 0 4px 0', 
-                        color: '#fff', 
-                        fontSize: '18px', 
-                        fontWeight: 600 
-                      }}>
-                        WhatsApp Business
-                      </h3>
-                      <p style={{ margin: 0, color: '#888', fontSize: '14px' }}>
-                        {whatsappStatus === 'connected' 
-                          ? 'Connected and monitoring messages' 
-                          : 'Connect to activate Amina'}
-                      </p>
-                    </div>
-                    {whatsappStatus === 'connected' && (
-                      <span style={{
-                        padding: '8px 16px',
-                        background: 'rgba(74,222,128,0.1)',
-                        color: '#4ADE80',
-                        borderRadius: '20px',
-                        fontSize: '13px',
-                        fontWeight: 500
-                      }}>
-                        Active
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Error Message */}
-                  {whatsappError && (
-                    <div style={{
-                      padding: '12px 16px',
-                      background: 'rgba(239, 68, 68, 0.1)',
-                      border: '1px solid rgba(239, 68, 68, 0.2)',
-                      borderRadius: '12px',
-                      color: '#EF4444',
-                      fontSize: '14px',
-                      marginBottom: '16px'
-                    }}>
-                      ⚠️ {whatsappError}
-                    </div>
-                  )}
-
-                  {whatsappStatus === 'disconnected' && (
-                    <button
-                      onClick={connectWhatsApp}
-                      style={{
-                        width: '100%',
-                        padding: '16px',
-                        background: 'linear-gradient(135deg, #E2725B 0%, #FF8E53 100%)',
-                        border: 'none',
-                        borderRadius: '12px',
-                        color: '#000',
-                        fontWeight: 600,
-                        fontSize: '15px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '8px'
-                      }}
-                    >
-                      Connect WhatsApp <ArrowRight size={18} />
-                    </button>
-                  )}
-
-                  {whatsappStatus === 'connecting' && (
-                    <div style={{ textAlign: 'center', padding: '40px' }}>
-                      {!qrCode ? (
-                        <>
-                          <div style={{ 
-                            width: '50px', height: '50px',
-                            border: '4px solid rgba(226,114,91,0.2)',
-                            borderTop: '4px solid #E2725B',
-                            borderRadius: '50%',
-                            animation: 'spin 1s linear infinite',
-                            margin: '0 auto 20px'
-                          }} />
-                          <p style={{ color: '#888' }}>Generating secure connection...</p>
-                        </>
-                      ) : (
-                        <div style={{ 
-                          display: 'flex', 
-                          flexDirection: 'column', 
-                          alignItems: 'center' 
-                        }}>
-                          <div style={{ 
-                            backgroundColor: '#fff', 
-                            padding: '20px', 
-                            borderRadius: '16px', 
-                            marginBottom: '20px',
-                            boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
-                          }}>
-                            <img src={qrCode} alt="WhatsApp QR" style={{ width: '220px', height: '220px' }} />
-                          </div>
-                          <p style={{ 
-                            color: '#888', 
-                            fontSize: '14px', 
-                            textAlign: 'center', 
-                            maxWidth: '300px' 
-                          }}>
-                            Open WhatsApp on your phone → Settings → Linked Devices → Link a Device
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {whatsappStatus === 'connected' && (
                     <div style={{ 
                       display: 'flex', 
                       alignItems: 'center', 
                       gap: '16px', 
-                      padding: '16px', 
-                      background: 'rgba(74,222,128,0.05)', 
-                      borderRadius: '12px' 
+                      marginBottom: '20px' 
                     }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ color: '#4ADE80', fontSize: '14px', marginBottom: '4px' }}>
-                          ✓ Connected
-                        </div>
-                        <div style={{ color: '#666', fontSize: '13px' }}>+234 ••• ••• ••45</div>
-                      </div>
-                      <button style={{
-                        padding: '10px 16px',
-                        background: 'transparent',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        borderRadius: '8px',
-                        color: '#888',
-                        fontSize: '13px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s'
+                      <div style={{
+                        width: '56px', height: '56px',
+                        background: whatsappStatus === 'connected' ? 'rgba(74,222,128,0.1)' : 'rgba(226,114,91,0.1)',
+                        borderRadius: '16px',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '28px'
                       }}>
-                        Manage
-                      </button>
+                        {whatsappStatus === 'connected' ? '✅' : '💬'}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <h3 style={{ 
+                          margin: '0 0 4px 0', 
+                          color: '#fff', 
+                          fontSize: '18px', 
+                          fontWeight: 600 
+                        }}>
+                          WhatsApp Business
+                        </h3>
+                        <p style={{ margin: 0, color: '#888', fontSize: '14px' }}>
+                          {whatsappStatus === 'connected' 
+                            ? 'Connected and monitoring messages' 
+                            : 'Connect to activate your AI employees'}
+                        </p>
+                      </div>
+                      {whatsappStatus === 'connected' && (
+                        <span style={{
+                          padding: '8px 16px',
+                          background: 'rgba(74,222,128,0.1)',
+                          color: '#4ADE80',
+                          borderRadius: '20px',
+                          fontSize: '13px',
+                          fontWeight: 500
+                        }}>
+                          Active
+                        </span>
+                      )}
                     </div>
-                  )}
-                </div>
+
+                    {/* Error Message */}
+                    {whatsappError && (
+                      <div style={{
+                        padding: '12px 16px',
+                        background: 'rgba(239, 68, 68, 0.1)',
+                        border: '1px solid rgba(239, 68, 68, 0.2)',
+                        borderRadius: '12px',
+                        color: '#EF4444',
+                        fontSize: '14px',
+                        marginBottom: '16px'
+                      }}>
+                        ⚠️ {whatsappError}
+                      </div>
+                    )}
+
+                    {whatsappStatus === 'disconnected' && (
+                      <button
+                        onClick={() => connectWhatsApp()}
+                        style={{
+                          width: '100%',
+                          padding: '16px',
+                          background: 'linear-gradient(135deg, #E2725B 0%, #FF8E53 100%)',
+                          border: 'none',
+                          borderRadius: '12px',
+                          color: '#000',
+                          fontWeight: 600,
+                          fontSize: '15px',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px'
+                        }}
+                      >
+                        Connect WhatsApp <ArrowRight size={18} />
+                      </button>
+                    )}
+
+                    {whatsappStatus === 'connecting' && (
+                      <div style={{ textAlign: 'center', padding: '40px' }}>
+                        {!qrCode ? (
+                          <>
+                            <div style={{ 
+                              width: '50px', height: '50px',
+                              border: '4px solid rgba(226,114,91,0.2)',
+                              borderTop: '4px solid #E2725B',
+                              borderRadius: '50%',
+                              animation: 'spin 1s linear infinite',
+                              margin: '0 auto 20px'
+                            }} />
+                            <p style={{ color: '#888' }}>Generating secure connection...</p>
+                          </>
+                        ) : (
+                          <div style={{ 
+                            display: 'flex', 
+                            flexDirection: 'column', 
+                            alignItems: 'center' 
+                          }}>
+                            <div style={{ 
+                              backgroundColor: '#fff', 
+                              padding: '20px', 
+                              borderRadius: '16px', 
+                              marginBottom: '20px',
+                              boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+                            }}>
+                              <img src={qrCode} alt="WhatsApp QR" style={{ width: '220px', height: '220px' }} />
+                            </div>
+                            <p style={{ 
+                              color: '#888', 
+                              fontSize: '14px', 
+                              textAlign: 'center', 
+                              maxWidth: '300px' 
+                            }}>
+                              Open WhatsApp on your phone → Settings → Linked Devices → Link a Device
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {whatsappStatus === 'connected' && (
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '16px', 
+                        padding: '16px', 
+                        background: 'rgba(74,222,128,0.05)', 
+                        borderRadius: '12px' 
+                      }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ color: '#4ADE80', fontSize: '14px', marginBottom: '4px' }}>
+                            ✓ Connected
+                          </div>
+                          <div style={{ color: '#666', fontSize: '13px' }}>Ready to handle messages</div>
+                        </div>
+                        <button style={{
+                          padding: '10px 16px',
+                          background: 'transparent',
+                          border: '1px solid rgba(255,255,255,0.1)',
+                          borderRadius: '8px',
+                          color: '#888',
+                          fontSize: '13px',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s'
+                        }}>
+                          Manage
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Recent Activity */}
                 <div style={{
@@ -702,7 +846,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token: propToken }) => {
                     Recent Activity
                   </h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    {recentActivity.map((activity, idx) => (
+                    {recentActivity.length > 0 ? recentActivity.map((activity, idx) => (
                       <div key={idx} style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -735,7 +879,11 @@ const Dashboard: React.FC<DashboardProps> = ({ token: propToken }) => {
                           </div>
                         </div>
                       </div>
-                    ))}
+                    )) : (
+                      <div style={{ color: '#666', textAlign: 'center', padding: '20px' }}>
+                        No recent activity. Your team will start working once connected!
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -761,8 +909,8 @@ const Dashboard: React.FC<DashboardProps> = ({ token: propToken }) => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {[{
                         icon: <Users size={18} />, 
-                        label: 'Hire Team Members', 
-                        desc: 'Add more AI employees', 
+                        label: activeEmployees.length > 0 ? 'Manage Team' : 'Hire Team Members', 
+                        desc: activeEmployees.length > 0 ? `${activeEmployees.length} employees` : 'Add AI employees', 
                         action: () => navigate('/team') 
                       },
                       { 
@@ -809,7 +957,7 @@ const Dashboard: React.FC<DashboardProps> = ({ token: propToken }) => {
                   </div>
                 </div>
 
-                {/* Upgrade CTA */}
+                {/* Upgrade CTA - Only show if no employees */}
                 {activeEmployees.length === 0 && (
                   <div style={{
                     background: 'linear-gradient(145deg, rgba(226,114,91,0.1) 0%, rgba(26,26,36,0.5) 100%)',
@@ -841,6 +989,42 @@ const Dashboard: React.FC<DashboardProps> = ({ token: propToken }) => {
                       }}
                     >
                       Hire Now
+                    </button>
+                  </div>
+                )}
+
+                {/* Team Status - Show if has employees */}
+                {activeEmployees.length > 0 && (
+                  <div style={{
+                    background: 'linear-gradient(145deg, rgba(74,222,128,0.05) 0%, rgba(26,26,36,0.5) 100%)',
+                    border: '1px solid rgba(74,222,128,0.2)',
+                    borderRadius: '20px',
+                    padding: '24px',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{ fontSize: '32px', marginBottom: '8px' }}>✅</div>
+                    <h4 style={{ color: '#fff', marginBottom: '8px', fontSize: '16px' }}>
+                      Team Active
+                    </h4>
+                    <p style={{ color: '#888', fontSize: '13px', marginBottom: '16px', lineHeight: '1.5' }}>
+                      {activeEmployees[0]?.display_name || 'Your AI employee'} is ready to handle your customers.
+                    </p>
+                    <button 
+                      onClick={() => navigate('/team')} 
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        background: 'rgba(74,222,128,0.1)',
+                        border: '1px solid rgba(74,222,128,0.3)',
+                        borderRadius: '10px',
+                        color: '#4ADE80',
+                        fontWeight: 600,
+                        fontSize: '14px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      Manage Team
                     </button>
                   </div>
                 )}
