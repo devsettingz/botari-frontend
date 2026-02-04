@@ -21,11 +21,17 @@ const PaymentVerify: React.FC = () => {
     }
 
     verifyPayment(reference);
-  }, []);
+  }, [searchParams]);
 
   const verifyPayment = async (reference: string) => {
     try {
       const token = localStorage.getItem('jwt');
+      if (!token) {
+        setStatus('failed');
+        setMessage('Authentication required. Please login again.');
+        return;
+      }
+
       const res = await axios.get(`${API_URL}/api/payments/verify/${reference}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -42,8 +48,9 @@ const PaymentVerify: React.FC = () => {
         setMessage('Payment verification failed.');
       }
     } catch (err: any) {
+      console.error('Payment verification error:', err);
       setStatus('failed');
-      setMessage(err.response?.data?.error || 'Verification failed');
+      setMessage(err.response?.data?.error || 'Verification failed. Please try again.');
     }
   };
 
@@ -60,8 +67,9 @@ const PaymentVerify: React.FC = () => {
     }}>
       {status === 'loading' && (
         <>
-          <Loader2 size={48} color="#E2725B" style={{ animation: 'spin 1s linear infinite' }} />
+          <Loader2 size={48} color="#E2725B" className="spin-animation" />
           <h2 style={{ marginTop: '24px', fontSize: '24px' }}>Verifying Payment...</h2>
+          <p style={{ color: '#666', marginTop: '8px' }}>{message}</p>
         </>
       )}
 
@@ -91,7 +99,8 @@ const PaymentVerify: React.FC = () => {
               border: 'none',
               borderRadius: '8px',
               cursor: 'pointer',
-              fontWeight: 'bold'
+              fontWeight: 'bold',
+              fontSize: '14px'
             }}
           >
             Back to Team
@@ -101,8 +110,11 @@ const PaymentVerify: React.FC = () => {
 
       <style>{`
         @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .spin-animation {
+          animation: spin 1s linear infinite;
         }
       `}</style>
     </div>
