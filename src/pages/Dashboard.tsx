@@ -2,8 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Users, MessageCircle, TrendingUp, Zap, ArrowRight, 
-  Settings, Plus, Activity, BarChart3, LogOut, User, CreditCard
+  Users, MessageCircle, Zap, Plus, Activity, BarChart3, LogOut, User, CreditCard
 } from 'lucide-react';
 import DashboardWidget from '../components/DashboardWidget';
 
@@ -38,7 +37,6 @@ const Dashboard: React.FC = () => {
       });
       
       console.log('Team fetched:', res.data);
-      // Use data as-is - backend already filters for hired employees
       setActiveEmployees(res.data || []);
     } catch (err) {
       console.error('Failed to fetch team:', err);
@@ -83,7 +81,7 @@ const Dashboard: React.FC = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       alert('WhatsApp connected successfully!');
-      fetchTeam(); // Refresh to show connected status
+      fetchTeam();
       setQrCode(null);
       setPairingCode(null);
     } catch (err) {
@@ -103,7 +101,6 @@ const Dashboard: React.FC = () => {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#0A0A0F', color: '#FFFFFF', padding: '32px', fontFamily: 'Inter, sans-serif' }}>
       
-      {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <p style={{ color: '#666', marginBottom: '8px' }}>Welcome back,</p>
@@ -125,7 +122,6 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* PAYMENT HISTORY SECTION */}
       {showPayments && (
         <div style={{ background: 'rgba(26,26,36,0.8)', borderRadius: '20px', padding: '24px', marginBottom: '32px', border: '1px solid rgba(255,255,255,0.1)' }}>
           <h3 style={{ marginBottom: '20px', marginTop: 0 }}>Transaction History</h3>
@@ -152,12 +148,10 @@ const Dashboard: React.FC = () => {
         </div>
       )}
 
-      {/* ANALYTICS VIEW */}
       {showAnalytics ? (
         <DashboardWidget businessId={1} token={localStorage.getItem('jwt') || ''} />
       ) : (
         <>
-          {/* AI EMPLOYEES SECTION */}
           {activeEmployees.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '80px 20px', background: 'rgba(26,26,36,0.5)', borderRadius: '20px', border: '1px solid rgba(226,114,91,0.2)' }}>
               <div style={{ fontSize: '64px', marginBottom: '20px' }}>🤖</div>
@@ -208,7 +202,6 @@ const Dashboard: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* WhatsApp Connection */}
                   {emp.connection_status !== 'connected' && (
                     <div style={{ marginTop: '20px', padding: '20px', background: 'rgba(0,0,0,0.3)', borderRadius: '12px' }}>
                       {!qrCode ? (
@@ -244,7 +237,6 @@ const Dashboard: React.FC = () => {
             </div>
           )}
 
-          {/* Stats Grid */}
           <div style={{ 
             display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
             gap: '20px', marginTop: '32px'
@@ -260,7 +252,6 @@ const Dashboard: React.FC = () => {
   );
 };
 
-// Helper components
 const StatCard = ({ icon, label, value, trend, subtext }: any) => (
   <div style={{ background: 'rgba(26,26,36,0.8)', padding: '24px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)' }}>
     <div style={{ marginBottom: '12px' }}>{icon}</div>
