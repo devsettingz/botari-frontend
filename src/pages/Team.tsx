@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Check, X, Loader2, Users, Sparkles } from 'lucide-react';
+import { Check, X, Loader2, Users, Sparkles, ArrowLeft } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -11,33 +11,36 @@ interface Employee {
   display_name: string;
   employee_role: string;
   description: string;
-  base_monthly_price: number;
+  price_monthly: number;
+  base_monthly_price?: number;
   is_hired?: boolean;
-  supported_channels: string[];
+  supported_channels?: string[];
+  assigned_channel?: string;
 }
 
 const Team: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
-  const [hiring, setHiring] = useState<string | null>(null);
+  const [hiring, setHiring] = useState<number | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const token = localStorage.getItem('jwt');
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchTeam();
+    fetchAvailableEmployees();
     window.scrollTo(0, 0);
   }, []);
 
-  const fetchTeam = async () => {
+  const fetchAvailableEmployees = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/employees/my-team`, {
+      // FIXED: Use /api/employees (not /my-team) to get AVAILABLE employees
+      const res = await axios.get(`${API_URL}/api/employees`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setEmployees(res.data);
     } catch (err) {
-      console.error(err);
+      console.error('Failed to fetch employees:', err);
     } finally {
       setLoading(false);
     }
@@ -51,11 +54,11 @@ const Team: React.FC = () => {
   const processPayment = async () => {
     if (!selectedEmployee) return;
     
-    setHiring(selectedEmployee.name);
+    setHiring(selectedEmployee.id);
     try {
       const paymentRes = await axios.post(`${API_URL}/api/payments/initialize`, {
         employee_id: selectedEmployee.id,
-        amount: selectedEmployee.base_monthly_price,
+        amount: selectedEmployee.price_monthly || selectedEmployee.base_monthly_price || 4900,
         email: localStorage.getItem('user_email') || 'user@business.com'
       }, {
         headers: { Authorization: `Bearer ${token}` }
@@ -66,9 +69,6 @@ const Team: React.FC = () => {
         window.location.href = paymentRes.data.authorization_url;
         return;
       }
-
-      // Fallback: Direct hire for testing
-      await completeHiring(selectedEmployee);
       
     } catch (err: any) {
       alert(err.response?.data?.error || 'Payment initialization failed');
@@ -76,35 +76,17 @@ const Team: React.FC = () => {
     }
   };
 
-  const completeHiring = async (employee: Employee) => {
-    try {
-      await axios.post(`${API_URL}/api/employees/hire`, 
-        { employeeName: employee.name, channelType: 'whatsapp' },
-        { headers: { Authorization: `Bearer ${token}` }}
-      );
-      
-      alert(`🎉 ${employee.display_name} has joined your team!`);
-      setShowPaymentModal(false);
-      fetchTeam();
-      navigate('/dashboard');
-    } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to activate employee');
-    } finally {
-      setHiring(null);
-    }
-  };
-
-  const getChannelIcon = (channels: string[]) => {
-    if (channels.includes('whatsapp')) return '💬';
-    if (channels.includes('email')) return '📧';
-    if (channels.includes('voice')) return '📞';
+  const getChannelIcon = (channels?: string[], assigned?: string) => {
+    if (assigned === 'whatsapp' || channels?.includes('whatsapp')) return '💬';
+    if (channels?.includes('email')) return '📧';
+    if (channels?.includes('voice')) return '📞';
     return '🤖';
   };
 
-  const getChannelColor = (channels: string[]) => {
-    if (channels.includes('whatsapp')) return '#22c55e';
-    if (channels.includes('email')) return '#3b82f6';
-    if (channels.includes('voice')) return '#f59e0b';
+  const getChannelColor = (channels?: string[], assigned?: string) => {
+    if (assigned === 'whatsapp' || channels?.includes('whatsapp')) return '#22c55e';
+    if (channels?.includes('email')) return '#3b82f6';
+    if (channels?.includes('voice')) return '#f59e0b';
     return '#E2725B';
   };
 
@@ -158,6 +140,24 @@ const Team: React.FC = () => {
 
       <div style={{ position: 'relative', zIndex: 1, maxWidth: '1400px', margin: '0 auto' }}>
         
+        {/* Back Button */}
+        <button 
+          onClick={() => navigate('/dashboard')}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            marginBottom: '24px',
+            background: 'none',
+            border: 'none',
+            color: '#888',
+            cursor: 'pointer',
+            fontSize: '14px'
+          }}
+        >
+          <ArrowLeft size={18} /> Back to Dashboard
+        </button>
+
         {/* Header */}
         <div style={{ marginBottom: '40px' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
@@ -174,7 +174,7 @@ const Team: React.FC = () => {
             </h1>
           </div>
           <p style={{ color: '#888', fontSize: '18px', maxWidth: '600px', lineHeight: '1.6' }}>
-            Specialized AI employees for African businesses. Start with <span style={{ color: '#E2725B', fontWeight: 600 }}>Amina</span> for WhatsApp sales, then scale with specialists.
+            Specialized AI employees for African businesses. Start with <span style={{ color: '#E2725B', fontWeight: 600 }}>Amina</span> for WhatsApp sales.
           </p>
         </div>
 
@@ -226,24 +226,22 @@ const Team: React.FC = () => {
           gap: '24px' 
         }}>
           {employees.map((emp) => {
-            const isLaunchEmployee = emp.name === 'amina' || emp.name === 'stan';
-            const isComingSoon = emp.name === 'linda' || emp.name === 'penny';
+            const isAmina = emp.name?.toLowerCase().includes('amina') || emp.display_name?.toLowerCase().includes('amina');
             
             return (
               <div key={emp.id} style={{
-                backgroundColor: emp.is_hired ? 'rgba(34, 197, 94, 0.1)' : 'rgba(26, 26, 36, 0.6)',
-                border: `2px solid ${emp.is_hired ? '#22c55e' : isLaunchEmployee ? '#E2725B' : 'rgba(255,255,255,0.08)'}`,
+                backgroundColor: 'rgba(26, 26, 36, 0.6)',
+                border: `2px solid ${isAmina ? '#E2725B' : 'rgba(255,255,255,0.08)'}`,
                 borderRadius: '16px',
                 padding: '28px',
                 position: 'relative',
                 transition: 'all 0.3s ease',
-                opacity: isComingSoon ? 0.6 : 1,
-                transform: isLaunchEmployee && !emp.is_hired ? 'scale(1.02)' : 'scale(1)',
-                boxShadow: isLaunchEmployee && !emp.is_hired ? '0 4px 20px rgba(226, 114, 91, 0.1)' : 'none',
+                transform: isAmina ? 'scale(1.02)' : 'scale(1)',
+                boxShadow: isAmina ? '0 4px 20px rgba(226, 114, 91, 0.1)' : 'none',
                 backdropFilter: 'blur(10px)'
               }}>
                 {/* Recommended Badge */}
-                {isLaunchEmployee && !emp.is_hired && !isComingSoon && (
+                {isAmina && (
                   <div style={{
                     position: 'absolute',
                     top: '-12px',
@@ -267,38 +265,22 @@ const Team: React.FC = () => {
                       width: '56px',
                       height: '56px',
                       borderRadius: '12px',
-                      backgroundColor: emp.is_hired ? '#22c55e' : getChannelColor(emp.supported_channels),
+                      backgroundColor: getChannelColor(emp.supported_channels, emp.assigned_channel),
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       fontSize: '28px',
                       boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
                     }}>
-                      {getChannelIcon(emp.supported_channels)}
+                      {getChannelIcon(emp.supported_channels, emp.assigned_channel)}
                     </div>
                     <div>
                       <h3 style={{ 
                         margin: '0 0 4px 0', 
                         color: '#fff', 
-                        fontSize: '22px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px'
+                        fontSize: '22px'
                       }}>
                         {emp.display_name}
-                        {emp.is_hired && (
-                          <span style={{
-                            backgroundColor: '#22c55e',
-                            color: '#000',
-                            padding: '4px 10px',
-                            borderRadius: '12px',
-                            fontSize: '10px',
-                            fontWeight: 'bold',
-                            verticalAlign: 'middle'
-                          }}>
-                            ACTIVE
-                          </span>
-                        )}
                       </h3>
                       <p style={{ margin: 0, color: '#666', fontSize: '14px', fontWeight: '500' }}>
                         {emp.employee_role}
@@ -313,7 +295,7 @@ const Team: React.FC = () => {
                       color: '#fff',
                       lineHeight: '1'
                     }}>
-                      ${emp.base_monthly_price / 100}
+                      ${(emp.price_monthly || emp.base_monthly_price || 4900) / 100}
                     </div>
                     <div style={{ fontSize: '13px', color: '#666', marginTop: '4px' }}>per month</div>
                   </div>
@@ -326,88 +308,72 @@ const Team: React.FC = () => {
                   fontSize: '15px',
                   minHeight: '48px'
                 }}>
-                  {emp.description}
+                  {emp.description || `AI assistant specialized in ${emp.employee_role}`}
                 </p>
 
                 {/* Capabilities */}
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '24px' }}>
-                  {emp.supported_channels.map((ch) => (
+                  {(emp.supported_channels || [emp.assigned_channel || 'whatsapp']).map((ch: string) => (
                     <span key={ch} style={{
-                      backgroundColor: emp.is_hired ? 'rgba(34, 197, 94, 0.1)' : 'rgba(255,255,255,0.05)',
-                      color: emp.is_hired ? '#22c55e' : '#888',
+                      backgroundColor: 'rgba(255,255,255,0.05)',
+                      color: '#888',
                       padding: '6px 12px',
                       borderRadius: '6px',
                       fontSize: '11px',
                       textTransform: 'uppercase',
                       fontWeight: '600',
                       letterSpacing: '0.5px',
-                      border: `1px solid ${emp.is_hired ? 'rgba(34, 197, 94, 0.2)' : 'rgba(255,255,255,0.1)'}`
+                      border: '1px solid rgba(255,255,255,0.1)'
                     }}>
                       {ch}
                     </span>
                   ))}
                 </div>
 
-                {/* Action Button */}
-                {emp.is_hired ? (
-                  <button disabled style={{
+                {/* Hire Button */}
+                <button 
+                  onClick={() => initPayment(emp)}
+                  disabled={!!hiring}
+                  style={{
                     width: '100%',
-                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                    color: '#22c55e',
-                    border: '2px solid #22c55e',
+                    backgroundColor: '#E2725B',
+                    color: '#000',
+                    border: 'none',
                     padding: '14px',
                     borderRadius: '10px',
-                    cursor: 'default',
+                    cursor: 'pointer',
                     fontWeight: 'bold',
                     fontSize: '15px',
+                    transition: 'all 0.2s',
+                    opacity: hiring === emp.id ? 0.7 : 1,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '8px'
-                  }}>
-                    <Check size={18} /> Already Hired
-                  </button>
-                ) : (
-                  <button 
-                    onClick={() => isComingSoon ? null : initPayment(emp)}
-                    disabled={!!hiring || isComingSoon}
-                    style={{
-                      width: '100%',
-                      backgroundColor: isComingSoon ? 'rgba(255,255,255,0.05)' : '#E2725B',
-                      color: isComingSoon ? '#444' : '#000',
-                      border: 'none',
-                      padding: '14px',
-                      borderRadius: '10px',
-                      cursor: isComingSoon ? 'not-allowed' : 'pointer',
-                      fontWeight: 'bold',
-                      fontSize: '15px',
-                      transition: 'all 0.2s',
-                      opacity: hiring === emp.name ? 0.7 : 1,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px'
-                    }}
-                  >
-                    {hiring === emp.name ? (
-                      <>
-                        <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
-                        Processing...
-                      </>
-                    ) : isComingSoon ? (
-                      <><X size={18} /> Coming Next Week</>
-                    ) : (
-                      <>
-                        <Sparkles size={18} />
-                        Hire {emp.display_name.split(' ')[0]}
-                      </>
-                    )}
-                  </button>
-                )}
+                  }}
+                >
+                  {hiring === emp.id ? (
+                    <>
+                      <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles size={18} />
+                      Hire {emp.display_name.split(' ')[0]}
+                    </>
+                  )}
+                </button>
               </div>
             );
           })}
         </div>
+
+        {employees.length === 0 && (
+          <div style={{textAlign: 'center', padding: '60px', color: '#666'}}>
+            No employees available. Please check back later.
+          </div>
+        )}
 
         {/* Payment Modal */}
         {showPaymentModal && selectedEmployee && (
@@ -436,7 +402,7 @@ const Team: React.FC = () => {
             }}>
               <h2 style={{ margin: '0 0 8px 0', color: '#fff' }}>Hire {selectedEmployee.display_name}</h2>
               <p style={{ color: '#666', marginBottom: '24px' }}>
-                You will be charged ${selectedEmployee.base_monthly_price / 100} monthly. 
+                You will be charged ${(selectedEmployee.price_monthly || selectedEmployee.base_monthly_price || 4900) / 100} monthly. 
                 Cancel anytime.
               </p>
 
@@ -449,11 +415,11 @@ const Team: React.FC = () => {
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <span style={{ color: '#666' }}>Monthly fee</span>
-                  <span style={{ color: '#fff' }}>${selectedEmployee.base_monthly_price / 100}</span>
+                  <span style={{ color: '#fff' }}>${(selectedEmployee.price_monthly || selectedEmployee.base_monthly_price || 4900) / 100}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
                   <span style={{ color: '#fff', fontWeight: 'bold' }}>Total today</span>
-                  <span style={{ color: '#E2725B', fontWeight: 'bold' }}>${selectedEmployee.base_monthly_price / 100}</span>
+                  <span style={{ color: '#E2725B', fontWeight: 'bold' }}>${(selectedEmployee.price_monthly || selectedEmployee.base_monthly_price || 4900) / 100}</span>
                 </div>
               </div>
 
@@ -507,12 +473,4 @@ const Team: React.FC = () => {
 
       <style>{`
         @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
-    </div>
-  );
-};
-
-export default Team;
+          0% { transform: rotate(0deg);
