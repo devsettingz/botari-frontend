@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Check, X, Loader2, Users, Sparkles, ArrowLeft } from 'lucide-react';
+import { Loader2, Users, Sparkles, ArrowLeft } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -13,8 +13,6 @@ interface Employee {
   description: string;
   price_monthly: number;
   base_monthly_price?: number;
-  is_hired?: boolean;
-  supported_channels?: string[];
   assigned_channel?: string;
 }
 
@@ -34,7 +32,6 @@ const Team: React.FC = () => {
 
   const fetchAvailableEmployees = async () => {
     try {
-      // FIXED: Use /api/employees (not /my-team) to get AVAILABLE employees
       const res = await axios.get(`${API_URL}/api/employees`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -64,7 +61,6 @@ const Team: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      // Redirect to Paystack
       if (paymentRes.data.authorization_url) {
         window.location.href = paymentRes.data.authorization_url;
         return;
@@ -76,45 +72,43 @@ const Team: React.FC = () => {
     }
   };
 
-  const getChannelIcon = (channels?: string[], assigned?: string) => {
-    if (assigned === 'whatsapp' || channels?.includes('whatsapp')) return '💬';
-    if (channels?.includes('email')) return '📧';
-    if (channels?.includes('voice')) return '📞';
+  const getChannelIcon = (assigned?: string) => {
+    if (assigned === 'whatsapp') return '💬';
     return '🤖';
   };
 
-  const getChannelColor = (channels?: string[], assigned?: string) => {
-    if (assigned === 'whatsapp' || channels?.includes('whatsapp')) return '#22c55e';
-    if (channels?.includes('email')) return '#3b82f6';
-    if (channels?.includes('voice')) return '#f59e0b';
+  const getChannelColor = (assigned?: string) => {
+    if (assigned === 'whatsapp') return '#22c55e';
     return '#E2725B';
   };
 
-  if (loading) return (
-    <div style={{ 
-      minHeight: '100vh',
-      backgroundColor: '#0A0A0F',
-      color: 'white', 
-      padding: 40, 
-      textAlign: 'center',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: '16px'
-    }}>
+  if (loading) {
+    return (
       <div style={{ 
-        border: '3px solid #333', 
-        borderTop: '3px solid #E2725B', 
-        borderRadius: '50%', 
-        width: '40px', 
-        height: '40px', 
-        animation: 'spin 1s linear infinite'
-      }} />
-      <p>Loading available talent...</p>
-      <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
-    </div>
-  );
+        minHeight: '100vh',
+        backgroundColor: '#0A0A0F',
+        color: 'white', 
+        padding: 40, 
+        textAlign: 'center',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '16px'
+      }}>
+        <div style={{ 
+          border: '3px solid #333', 
+          borderTop: '3px solid #E2725B', 
+          borderRadius: '50%', 
+          width: '40px', 
+          height: '40px', 
+          animation: 'spin 1s linear infinite'
+        }} />
+        <p>Loading available talent...</p>
+        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
 
   return (
     <div style={{
@@ -125,7 +119,6 @@ const Team: React.FC = () => {
       padding: '32px',
       boxSizing: 'border-box'
     }}>
-      {/* Background */}
       <div style={{
         position: 'fixed',
         top: 0, left: 0, right: 0, bottom: 0,
@@ -140,7 +133,6 @@ const Team: React.FC = () => {
 
       <div style={{ position: 'relative', zIndex: 1, maxWidth: '1400px', margin: '0 auto' }}>
         
-        {/* Back Button */}
         <button 
           onClick={() => navigate('/dashboard')}
           style={{
@@ -158,7 +150,6 @@ const Team: React.FC = () => {
           <ArrowLeft size={18} /> Back to Dashboard
         </button>
 
-        {/* Header */}
         <div style={{ marginBottom: '40px' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
             <Users size={32} color="#E2725B" />
@@ -178,7 +169,6 @@ const Team: React.FC = () => {
           </p>
         </div>
 
-        {/* Launch Banner */}
         <div style={{
           background: 'linear-gradient(135deg, rgba(226, 114, 91, 0.15) 0%, rgba(255, 142, 83, 0.1) 100%)',
           border: '1px solid rgba(226, 114, 91, 0.3)',
@@ -219,7 +209,6 @@ const Team: React.FC = () => {
           </div>
         </div>
 
-        {/* Employee Grid */}
         <div style={{ 
           display: 'grid', 
           gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', 
@@ -240,7 +229,6 @@ const Team: React.FC = () => {
                 boxShadow: isAmina ? '0 4px 20px rgba(226, 114, 91, 0.1)' : 'none',
                 backdropFilter: 'blur(10px)'
               }}>
-                {/* Recommended Badge */}
                 {isAmina && (
                   <div style={{
                     position: 'absolute',
@@ -265,14 +253,14 @@ const Team: React.FC = () => {
                       width: '56px',
                       height: '56px',
                       borderRadius: '12px',
-                      backgroundColor: getChannelColor(emp.supported_channels, emp.assigned_channel),
+                      backgroundColor: getChannelColor(emp.assigned_channel),
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       fontSize: '28px',
                       boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
                     }}>
-                      {getChannelIcon(emp.supported_channels, emp.assigned_channel)}
+                      {getChannelIcon(emp.assigned_channel)}
                     </div>
                     <div>
                       <h3 style={{ 
@@ -311,26 +299,22 @@ const Team: React.FC = () => {
                   {emp.description || `AI assistant specialized in ${emp.employee_role}`}
                 </p>
 
-                {/* Capabilities */}
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '24px' }}>
-                  {(emp.supported_channels || [emp.assigned_channel || 'whatsapp']).map((ch: string) => (
-                    <span key={ch} style={{
-                      backgroundColor: 'rgba(255,255,255,0.05)',
-                      color: '#888',
-                      padding: '6px 12px',
-                      borderRadius: '6px',
-                      fontSize: '11px',
-                      textTransform: 'uppercase',
-                      fontWeight: '600',
-                      letterSpacing: '0.5px',
-                      border: '1px solid rgba(255,255,255,0.1)'
-                    }}>
-                      {ch}
-                    </span>
-                  ))}
+                  <span style={{
+                    backgroundColor: 'rgba(255,255,255,0.05)',
+                    color: '#888',
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    fontSize: '11px',
+                    textTransform: 'uppercase',
+                    fontWeight: '600',
+                    letterSpacing: '0.5px',
+                    border: '1px solid rgba(255,255,255,0.1)'
+                  }}>
+                    {emp.assigned_channel || 'whatsapp'}
+                  </span>
                 </div>
 
-                {/* Hire Button */}
                 <button 
                   onClick={() => initPayment(emp)}
                   disabled={!!hiring}
@@ -375,7 +359,6 @@ const Team: React.FC = () => {
           </div>
         )}
 
-        {/* Payment Modal */}
         {showPaymentModal && selectedEmployee && (
           <div style={{
             position: 'fixed',
@@ -473,4 +456,12 @@ const Team: React.FC = () => {
 
       <style>{`
         @keyframes spin {
-          0% { transform: rotate(0deg);
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export default Team;
