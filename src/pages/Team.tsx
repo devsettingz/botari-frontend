@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';  // FIXED: Removed unused Link
+import { useNavigate } from 'react-router-dom';
 import { Check, X, Loader2, Users, Sparkles } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
@@ -53,7 +53,6 @@ const Team: React.FC = () => {
     
     setHiring(selectedEmployee.name);
     try {
-      // Initialize Paystack transaction
       const paymentRes = await axios.post(`${API_URL}/api/payments/initialize`, {
         employee_id: selectedEmployee.id,
         amount: selectedEmployee.base_monthly_price,
@@ -62,13 +61,13 @@ const Team: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      // If Paystack returns an authorization URL, redirect to it
+      // Redirect to Paystack
       if (paymentRes.data.authorization_url) {
         window.location.href = paymentRes.data.authorization_url;
         return;
       }
 
-      // Fallback: Direct hire (for testing without Paystack)
+      // Fallback: Direct hire for testing
       await completeHiring(selectedEmployee);
       
     } catch (err: any) {
@@ -79,19 +78,15 @@ const Team: React.FC = () => {
 
   const completeHiring = async (employee: Employee) => {
     try {
-      let channel = 'whatsapp';
-      if (employee.name === 'stan') channel = 'email';
-      if (employee.name === 'rachel') channel = 'voice';
-      
       await axios.post(`${API_URL}/api/employees/hire`, 
-        { employeeName: employee.name, channelType: channel },
+        { employeeName: employee.name, channelType: 'whatsapp' },
         { headers: { Authorization: `Bearer ${token}` }}
       );
       
       alert(`🎉 ${employee.display_name} has joined your team!`);
       setShowPaymentModal(false);
       fetchTeam();
-      navigate('/dashboard'); // Redirect to connect WhatsApp
+      navigate('/dashboard');
     } catch (err: any) {
       alert(err.response?.data?.error || 'Failed to activate employee');
     } finally {
@@ -199,7 +194,7 @@ const Team: React.FC = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <div style={{ fontSize: '40px' }}>🚀</div>
             <div>
-              <h3 style={{ margin: '0 0 4px 0', color: '#E2725B', fontSize: '20px' }}>Thursday Launch Special</h3>
+              <h3 style={{ margin: '0 0 4px 0', color: '#E2725B', fontSize: '20px' }}>Launch Special</h3>
               <p style={{ margin: 0, color: '#aaa', fontSize: '15px', lineHeight: '1.5' }}>
                 First 50 businesses get <strong>50% OFF</strong> first month. Use code <span style={{ 
                   backgroundColor: 'rgba(226, 114, 91, 0.2)', 
@@ -412,44 +407,6 @@ const Team: React.FC = () => {
               </div>
             );
           })}
-        </div>
-
-        {/* Help Section */}
-        <div style={{
-          marginTop: '48px',
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-          gap: '24px'
-        }}>
-          <div style={{
-            backgroundColor: 'rgba(26, 26, 36, 0.5)',
-            borderRadius: '12px',
-            padding: '24px',
-            border: '1px solid rgba(255,255,255,0.08)'
-          }}>
-            <h4 style={{ margin: '0 0 12px 0', color: '#E2725B', fontSize: '16px' }}>
-              💡 Which one should I pick?
-            </h4>
-            <p style={{ margin: 0, color: '#888', fontSize: '14px', lineHeight: '1.7' }}>
-              <strong style={{ color: '#fff' }}>Start with Amina ($49)</strong> if you get customer inquiries on WhatsApp. 
-              She answers questions, qualifies leads, and takes orders 24/7 in English, Swahili, or Pidgin.
-            </p>
-          </div>
-
-          <div style={{
-            backgroundColor: 'rgba(26, 26, 36, 0.5)',
-            borderRadius: '12px',
-            padding: '24px',
-            border: '1px solid rgba(255,255,255,0.08)'
-          }}>
-            <h4 style={{ margin: '0 0 12px 0', color: '#E2725B', fontSize: '16px' }}>
-              🚀 Launch Day Special
-            </h4>
-            <p style={{ margin: 0, color: '#888', fontSize: '14px', lineHeight: '1.7' }}>
-              Use code <strong style={{ color: '#fff', fontFamily: 'monospace' }}>FOUNDER50</strong> at checkout 
-              for 50% off your first month. Valid for the next 48 hours only.
-            </p>
-          </div>
         </div>
 
         {/* Payment Modal */}

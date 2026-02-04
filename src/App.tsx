@@ -11,6 +11,7 @@ import Calls from "./pages/Calls";
 import Team from "./pages/Team";
 import Conversations from "./pages/Conversations";
 import Analytics from "./pages/Analytics";
+import PaymentVerify from "./pages/PaymentVerify";
 import { useState, useEffect } from "react";
 import type { ReactElement } from "react";
 
@@ -27,7 +28,6 @@ const ProtectedRoute = ({ children }: { children: ReactElement }) => {
   const [isAuth, setIsAuth] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // Check for both jwt and token
     const token = localStorage.getItem("jwt") || localStorage.getItem("token");
     setIsAuth(!!token);
   }, []);
@@ -58,12 +58,11 @@ function App() {
 
   const handleLogin = (jwt: string) => {
     localStorage.setItem("jwt", jwt);
-    localStorage.setItem("token", jwt); // Store both for compatibility
+    localStorage.setItem("token", jwt);
     setToken(jwt);
   };
 
   const handleLogout = () => {
-    // Clear all possible auth keys
     localStorage.removeItem("jwt");
     localStorage.removeItem("token");
     localStorage.removeItem("business_id");
@@ -79,6 +78,7 @@ function App() {
         <Route path="/" element={<Layout token={token ?? undefined} onLogout={handleLogout}><LandingPage /></Layout>} />
         <Route path="/login" element={<Layout token={token ?? undefined} onLogout={handleLogout}><Login onLogin={handleLogin} /></Layout>} />
         <Route path="/register" element={<Layout token={token ?? undefined} onLogout={handleLogout}><Register /></Layout>} />
+        <Route path="/payment/verify" element={<PaymentVerify />} />
 
         {/* Protected Routes */}
         <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout><Dashboard token={token || undefined} /></DashboardLayout></ProtectedRoute>} />
