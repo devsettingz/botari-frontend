@@ -7,6 +7,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
 const PaymentCallback: React.FC = () => {
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing');
+  const [message, setMessage] = useState('Processing payment...');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -17,37 +18,49 @@ const PaymentCallback: React.FC = () => {
     try {
       const token = localStorage.getItem('jwt') || localStorage.getItem('token');
       const employeeId = localStorage.getItem('pending_hire_employee_id');
+      const employeeName = localStorage.getItem('pending_hire_employee_name') || 'Amina';
       
       if (!token) {
         setStatus('error');
+        setMessage('Authentication failed. Please login again.');
         return;
       }
 
-      if (employeeId) {
-        // Call the hire endpoint to add employee to business
-        await axios.post(`${API_URL}/api/employees/hire`, {
-          employee_id: parseInt(employeeId)
-        }, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
+      if (!employeeId) {
+        // No pending hire, just redirect
+        navigate('/dashboard');
+        return;
+      }
+
+      setMessage(`Activating ${employeeName}...`);
+      
+      // CRITICAL: Call the hire endpoint to add employee to business
+      const response = await axios.post(`${API_URL}/api/employees/hire`, {
+        employee_id: parseInt(employeeId)
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
         // Clear pending hire
         localStorage.removeItem('pending_hire_employee_id');
         localStorage.removeItem('pending_hire_employee_name');
         
         setStatus('success');
+        setMessage(`${employeeName} has been added to your team!`);
         
         // Redirect to dashboard after 2 seconds
         setTimeout(() => {
           navigate('/dashboard');
         }, 2000);
       } else {
-        // No pending hire, just go to dashboard
-        navigate('/dashboard');
+        throw new Error('Hiring failed');
       }
-    } catch (err) {
+      
+    } catch (err: any) {
       console.error('Error completing hire:', err);
       setStatus('error');
+      setMessage(err.response?.data?.error || 'Failed to activate employee. Contact support.');
     }
   };
 
@@ -67,7 +80,7 @@ const PaymentCallback: React.FC = () => {
         <>
           <Loader2 size={48} style={{ animation: 'spin 1s linear infinite', marginBottom: '20px', color: '#E2725B' }} />
           <h2 style={{ margin: 0, marginBottom: '8px' }}>Completing Setup...</h2>
-          <p style={{ color: '#888' }}>Adding Amina to your team</p>
+          <p style={{ color: '#888' }}>{message}</p>
         </>
       )}
       
@@ -75,16 +88,16 @@ const PaymentCallback: React.FC = () => {
         <>
           <CheckCircle size={48} style={{ marginBottom: '20px', color: '#4ADE80' }} />
           <h2 style={{ margin: 0, marginBottom: '8px' }}>Payment Successful!</h2>
-          <p style={{ color: '#888' }}>Amina has been added to your dashboard</p>
-          <p style={{ color: '#666', fontSize: '14px', marginTop: '20px' }}>Redirecting...</p>
+          <p style={{ color: '#888' }}>{message}</p>
+          <p style={{ color: '#666', fontSize: '14px', marginTop: '20px' }}>Redirecting to dashboard...</p>
         </>
       )}
       
       {status === 'error' && (
         <>
           <XCircle size={48} style={{ marginBottom: '20px', color: '#EF4444' }} />
-          <h2 style={{ margin: 0, marginBottom: '8px' }}>Something went wrong</h2>
-          <p style={{ color: '#888' }}>Please check your dashboard or try again</p>
+          <h2 style={{ margin: 0, marginBottom: '8px' }}>Setup Incomplete</h2>
+          <p style={{ color: '#888' }}>{message}</p>
           <button 
             onClick={() => navigate('/dashboard')}
             style={{
