@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { 
     Globe, Mail, Share2, FileText, CheckCircle, 
@@ -55,8 +54,6 @@ const OnboardingWizard: React.FC = () => {
         goals: [],
         brandVoice: 'professional'
     });
-    
-    const navigate = useNavigate();
 
     const handleNext = () => {
         if (step < 5) {
@@ -92,10 +89,10 @@ const OnboardingWizard: React.FC = () => {
             // Mark onboarding complete
             localStorage.setItem('onboarding_complete', 'true');
             
-            // Redirect after delay
+            // Force full page reload to trigger OnboardingCheck properly
             setTimeout(() => {
-                navigate('/dashboard');
-            }, 5000);
+                window.location.href = '/dashboard';
+            }, 3000);
             
         } catch (error: any) {
             console.error('Onboarding error:', error);
