@@ -12,6 +12,7 @@ import Team from "./pages/Team";
 import Conversations from "./pages/Conversations";
 import Analytics from "./pages/Analytics";
 import PaymentVerify from "./pages/PaymentVerify";
+import PaymentCallback from "./pages/PaymentCallback";
 import { useState, useEffect } from "react";
 import type { ReactElement } from "react";
 
@@ -79,6 +80,7 @@ function App() {
         <Route path="/login" element={<Layout token={token ?? undefined} onLogout={handleLogout}><Login onLogin={handleLogin} /></Layout>} />
         <Route path="/register" element={<Layout token={token ?? undefined} onLogout={handleLogout}><Register /></Layout>} />
         <Route path="/payment/verify" element={<PaymentVerify />} />
+        <Route path="/payment/callback" element={<PaymentCallback />} />
 
         {/* Protected Routes */}
         <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout><Dashboard token={token || undefined} /></DashboardLayout></ProtectedRoute>} />

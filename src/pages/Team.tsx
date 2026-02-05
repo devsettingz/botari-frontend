@@ -53,6 +53,10 @@ const Team: React.FC = () => {
     
     setHiring(selectedEmployee.id);
     try {
+      // Store employee ID for callback
+      localStorage.setItem('pending_hire_employee_id', selectedEmployee.id.toString());
+      localStorage.setItem('pending_hire_employee_name', selectedEmployee.display_name);
+      
       const paymentRes = await axios.post(`${API_URL}/api/payments/initialize`, {
         employee_id: selectedEmployee.id,
         amount: selectedEmployee.price_monthly || selectedEmployee.base_monthly_price || 4900,
@@ -63,12 +67,29 @@ const Team: React.FC = () => {
 
       if (paymentRes.data.authorization_url) {
         window.location.href = paymentRes.data.authorization_url;
-        return;
+      } else {
+        await completeHiring(selectedEmployee.id);
       }
       
     } catch (err: any) {
       alert(err.response?.data?.error || 'Payment initialization failed');
       setHiring(null);
+    }
+  };
+
+  const completeHiring = async (employeeId: number) => {
+    try {
+      await axios.post(`${API_URL}/api/employees/hire`, {
+        employee_id: employeeId
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      localStorage.removeItem('pending_hire_employee_id');
+      localStorage.removeItem('pending_hire_employee_name');
+      navigate('/dashboard');
+    } catch (err) {
+      console.error('Hiring error:', err);
+      alert('Payment succeeded but failed to activate employee. Contact support.');
     }
   };
 
