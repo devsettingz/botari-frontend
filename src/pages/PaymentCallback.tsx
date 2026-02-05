@@ -17,7 +17,6 @@ const PaymentCallback: React.FC = () => {
     try {
       const token = localStorage.getItem('jwt') || localStorage.getItem('token');
       const employeeId = localStorage.getItem('pending_hire_employee_id');
-      const employeeName = localStorage.getItem('pending_hire_employee_name') || 'Amina';
       
       if (!token) {
         setStatus('error');

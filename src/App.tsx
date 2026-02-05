@@ -83,7 +83,7 @@ function App() {
         <Route path="/payment/callback" element={<PaymentCallback />} />
 
         {/* Protected Routes */}
-        <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout><Dashboard token={token || undefined} /></DashboardLayout></ProtectedRoute>} />
+        <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout><Dashboard /></DashboardLayout></ProtectedRoute>} />
         <Route path="/team" element={<ProtectedRoute><DashboardLayout><Team /></DashboardLayout></ProtectedRoute>} />
         <Route path="/conversations" element={<ProtectedRoute><DashboardLayout><Conversations /></DashboardLayout></ProtectedRoute>} />
         <Route path="/calls" element={<ProtectedRoute><DashboardLayout><Calls /></DashboardLayout></ProtectedRoute>} />
