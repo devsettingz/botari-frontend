@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Users, LogOut, Plus, CreditCard } from 'lucide-react';
+import { Users, LogOut, Plus, CreditCard, X, Smartphone } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
 
@@ -10,6 +10,13 @@ const Dashboard: React.FC = () => {
   const [payments, setPayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showPayments, setShowPayments] = useState(false);
+  
+  // WhatsApp Connection States
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [qrCode, setQrCode] = useState<string | null>(null);
+  const [connectingEmployee, setConnectingEmployee] = useState<any>(null);
+  const [connectionStatus, setConnectionStatus] = useState<'idle' | 'loading' | 'qr_ready' | 'connected'>('idle');
+  
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -24,15 +31,11 @@ const Dashboard: React.FC = () => {
     }
 
     try {
-      // Fetch team
       const teamRes = await axios.get(`${API_URL}/api/employees/my-team`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
-      console.log('EMPLOYEES LOADED:', teamRes.data);
       setEmployees(teamRes.data || []);
 
-      // Fetch payments
       const payRes = await axios.get(`${API_URL}/api/employees/payments/history`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -42,6 +45,68 @@ const Dashboard: React.FC = () => {
       console.error('Error:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // WHATSAPP CONNECTION HANDLER
+  const handleConnectWhatsApp = async (employee: any) => {
+    const token = localStorage.getItem('jwt') || localStorage.getItem('token');
+    if (!token) {
+      alert('Please login again');
+      navigate('/login');
+      return;
+    }
+
+    setConnectingEmployee(employee);
+    setConnectionStatus('loading');
+    setShowQrModal(true);
+
+    try {
+      const response = await axios.post(
+        `${API_URL}/api/whatsapp/connect`,
+        { employee_id: employee.id },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response.data.qrCode) {
+        setQrCode(response.data.qrCode);
+        setConnectionStatus('qr_ready');
+      }
+    } catch (err: any) {
+      console.error('WhatsApp connect error:', err);
+      alert('Failed to generate QR code. Please try again.');
+      setConnectionStatus('idle');
+      setShowQrModal(false);
+    }
+  };
+
+  // VERIFY CONNECTION (simulate QR scan)
+  const handleVerifyConnection = async () => {
+    const token = localStorage.getItem('jwt') || localStorage.getItem('token');
+    
+    try {
+      await axios.post(
+        `${API_URL}/api/whatsapp/verify`,
+        { 
+          employee_id: connectingEmployee?.id,
+          phone_number: '+2340000000000' // You can make this dynamic
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      setConnectionStatus('connected');
+      // Refresh employee list to show updated status
+      fetchData();
+      
+      setTimeout(() => {
+        setShowQrModal(false);
+        setConnectionStatus('idle');
+        setQrCode(null);
+      }, 2000);
+      
+    } catch (err) {
+      console.error('Verify error:', err);
+      alert('Failed to verify connection');
     }
   };
 
@@ -90,7 +155,7 @@ const Dashboard: React.FC = () => {
         </div>
       )}
 
-      {/* CRITICAL SECTION: Show Hired Employees */}
+      {/* Employees Section */}
       {employees.length === 0 ? (
         <div style={{textAlign: 'center', padding: '60px', background: 'rgba(255,255,255,0.05)', borderRadius: '20px'}}>
           <div style={{fontSize: '48px', marginBottom: '16px'}}>🤖</div>
@@ -139,13 +204,117 @@ const Dashboard: React.FC = () => {
                   </div>
                 </div>
                 
+                {/* FIXED: Added onClick handler! */}
                 {emp.connection_status !== 'connected' && (
-                  <button style={{...primaryBtnStyle, width: '100%', marginTop: '16px'}}>
+                  <button 
+                    onClick={() => handleConnectWhatsApp(emp)}
+                    style={{...primaryBtnStyle, width: '100%', marginTop: '16px'}}
+                  >
+                    <Smartphone size={18} style={{marginRight: '8px'}} />
                     Connect WhatsApp
+                  </button>
+                )}
+                
+                {emp.connection_status === 'connected' && (
+                  <button 
+                    onClick={() => navigate(`/conversations?employee=${emp.id}`)}
+                    style={{...btnStyle, width: '100%', marginTop: '16px'}}
+                  >
+                    View Conversations
                   </button>
                 )}
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* QR CODE MODAL */}
+      {showQrModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0,0,0,0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '20px'
+        }}>
+          <div style={{
+            background: '#1a1a1a',
+            padding: '32px',
+            borderRadius: '16px',
+            maxWidth: '400px',
+            width: '100%',
+            textAlign: 'center',
+            border: '1px solid rgba(255,255,255,0.1)'
+          }}>
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px'}}>
+              <h3 style={{margin: 0}}>
+                {connectionStatus === 'loading' ? 'Generating QR Code...' : 
+                 connectionStatus === 'qr_ready' ? 'Scan with WhatsApp' : 
+                 'Connected! 🎉'}
+              </h3>
+              <button 
+                onClick={() => setShowQrModal(false)}
+                style={{background: 'none', border: 'none', color: 'white', cursor: 'pointer'}}
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {connectionStatus === 'loading' && (
+              <div style={{padding: '40px'}}>
+                <div style={{
+                  width: '50px',
+                  height: '50px',
+                  border: '3px solid rgba(226,114,91,0.3)',
+                  borderTop: '3px solid #E2725B',
+                  borderRadius: '50%',
+                  animation: 'spin 1s linear infinite',
+                  margin: '0 auto 20px'
+                }} />
+                <p>Preparing WhatsApp connection...</p>
+              </div>
+            )}
+
+            {connectionStatus === 'qr_ready' && qrCode && (
+              <>
+                <img 
+                  src={qrCode} 
+                  alt="WhatsApp QR Code" 
+                  style={{width: '100%', maxWidth: '300px', borderRadius: '8px', marginBottom: '20px'}} 
+                />
+                <p style={{color: '#888', marginBottom: '20px', fontSize: '14px'}}>
+                  1. Open WhatsApp on your phone<br/>
+                  2. Go to Settings → Linked Devices<br/>
+                  3. Tap "Link a Device" and scan this code
+                </p>
+                {/* For demo: Simulate successful scan */}
+                <button onClick={handleVerifyConnection} style={primaryBtnStyle}>
+                  I've Scanned the Code
+                </button>
+              </>
+            )}
+
+            {connectionStatus === 'connected' && (
+              <div style={{padding: '20px'}}>
+                <div style={{fontSize: '48px', marginBottom: '16px'}}>✅</div>
+                <h4>WhatsApp Connected!</h4>
+                <p style={{color: '#888'}}>{connectingEmployee?.display_name} is now ready to receive messages.</p>
+              </div>
+            )}
+
+            <style>{`
+              @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+              }
+            `}</style>
           </div>
         </div>
       )}
