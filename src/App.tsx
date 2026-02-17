@@ -13,6 +13,7 @@ import Conversations from "./pages/Conversations";
 import Analytics from "./pages/Analytics";
 import PaymentVerify from "./pages/PaymentVerify";
 import PaymentCallback from "./pages/PaymentCallback";
+import DemoStatus from "./pages/DemoStatus"; // NEW: Marketing demo page
 import OnboardingWizard from "./components/OnboardingWizard";
 import { useState, useEffect } from "react";
 import type { ReactElement } from "react";
@@ -37,7 +38,6 @@ const OnboardingCheck = ({ children }: { children: ReactElement }) => {
 
   useEffect(() => {
     const checkOnboarding = async () => {
-      // Skip check if already on onboarding page
       if (location.pathname === '/onboarding') {
         setLoading(false);
         return;
@@ -50,14 +50,12 @@ const OnboardingCheck = ({ children }: { children: ReactElement }) => {
       }
 
       try {
-        // Check localStorage first (fast)
         const completed = localStorage.getItem('onboarding_complete');
         if (completed === 'true') {
           setLoading(false);
           return;
         }
 
-        // Verify with backend
         const res = await axios.get(`${API_URL}/api/business/context`, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -69,7 +67,6 @@ const OnboardingCheck = ({ children }: { children: ReactElement }) => {
           setNeedsOnboarding(true);
         }
       } catch (error: any) {
-        // If 404, no context exists yet - needs onboarding
         if (error.response?.status === 404) {
           setNeedsOnboarding(true);
         }
@@ -171,6 +168,7 @@ function App() {
         <Route path="/register" element={<Layout token={token ?? undefined} onLogout={handleLogout}><Register /></Layout>} />
         <Route path="/payment/verify" element={<PaymentVerify />} />
         <Route path="/payment/callback" element={<PaymentCallback />} />
+        <Route path="/demo" element={<DemoStatus />} /> {/* NEW: Demo page - public access */}
 
         {/* Protected Routes with Onboarding Check */}
         <Route path="/onboarding" element={
