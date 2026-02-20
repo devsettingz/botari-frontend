@@ -5,7 +5,7 @@ import {
     ArrowRight, Sparkles, Zap, Target
 } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+const API_URL = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
 
 interface OnboardingData {
     useCase: string;

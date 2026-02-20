@@ -19,7 +19,7 @@ import { useState, useEffect } from "react";
 import type { ReactElement } from "react";
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+const API_URL = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
 
 const DashboardLayout = ({ children }: { children: ReactElement }) => (
   <div style={{ display: "flex", minHeight: "100vh", backgroundColor: "#0A0A0F" }}>

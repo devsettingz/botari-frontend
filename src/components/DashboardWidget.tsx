@@ -205,7 +205,7 @@ const DashboardWidget: React.FC<{ businessId: number; token: string }> = ({ busi
   const [activeTab, setActiveTab] = useState<'weekly' | 'monthly'>('weekly');
   const [loading, setLoading] = useState(true);
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+  const API_URL = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
 
   useEffect(() => {
     const fetchData = async () => {

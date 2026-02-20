@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { ArrowRight, Eye, EyeOff, Loader2, Mail, Lock } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+const API_URL = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
 
 interface LoginProps {
   onLogin?: (jwt: string) => void;

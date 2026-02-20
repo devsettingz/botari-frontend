@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000';
+const API_URL = import.meta.env.VITE_API_BASE || 'http://localhost:4000';
 
 const PaymentVerify: React.FC = () => {
   const [searchParams] = useSearchParams();
