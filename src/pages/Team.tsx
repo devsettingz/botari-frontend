@@ -303,7 +303,7 @@ const Team: React.FC = () => {
                       color: '#fff',
                       lineHeight: '1'
                     }}>
-                      ${(emp.price_monthly || emp.base_monthly_price || 4900) / 100}
+                      ${emp.price_monthly || 49}
                     </div>
                     <div style={{ fontSize: '13px', color: '#666', marginTop: '4px' }}>per month</div>
                   </div>
@@ -405,7 +405,7 @@ const Team: React.FC = () => {
             }}>
               <h2 style={{ margin: '0 0 8px 0', color: '#fff' }}>Hire {selectedEmployee.display_name}</h2>
               <p style={{ color: '#666', marginBottom: '24px' }}>
-                You will be charged ${(selectedEmployee.price_monthly || selectedEmployee.base_monthly_price || 4900) / 100} monthly. 
+                You will be charged ${selectedEmployee.price_monthly || 49} monthly. 
                 Cancel anytime.
               </p>
 
@@ -418,11 +418,11 @@ const Team: React.FC = () => {
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <span style={{ color: '#666' }}>Monthly fee</span>
-                  <span style={{ color: '#fff' }}>${(selectedEmployee.price_monthly || selectedEmployee.base_monthly_price || 4900) / 100}</span>
+                  <span style={{ color: '#fff' }}>${selectedEmployee.price_monthly || 49}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
                   <span style={{ color: '#fff', fontWeight: 'bold' }}>Total today</span>
-                  <span style={{ color: '#E2725B', fontWeight: 'bold' }}>${(selectedEmployee.price_monthly || selectedEmployee.base_monthly_price || 4900) / 100}</span>
+                  <span style={{ color: '#E2725B', fontWeight: 'bold' }}>${selectedEmployee.price_monthly || 49}</span>
                 </div>
               </div>
 
