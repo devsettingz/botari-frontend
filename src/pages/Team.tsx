@@ -32,9 +32,8 @@ const Team: React.FC = () => {
 
   const fetchAvailableEmployees = async () => {
     try {
-      const res = await axios.get(`${API_URL}/api/employees`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // Use simple endpoint that always works
+      const res = await axios.get(`${API_URL}/api/simple/employees`);
       setEmployees(res.data);
     } catch (err) {
       console.error('Failed to fetch employees:', err);
